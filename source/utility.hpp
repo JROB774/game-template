@@ -8,6 +8,23 @@
 #define DEFINE_PRIVATE_TYPE(name) struct name##__Type
 #define ALLOCATE_PRIVATE_TYPE(name) NK_MALLOC_TYPES(name##__Type, 1)
 
+template<typename T>
+struct Point
+{
+    T x,y;
+};
+
+template<typename T>
+struct Rect
+{
+    T x,y,w,h;
+};
+
+typedef Point<nkS32> iPoint;
+typedef Rect <nkS32> iRect;
+typedef Point<nkF32> fPoint;
+typedef Rect <nkF32> fRect;
+
 // Stack data structure.
 template<typename T, nkU32 N>
 struct Stack
