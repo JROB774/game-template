@@ -48,11 +48,13 @@
 #include "audio.hpp"
 #include "platform.hpp"
 #include "input.hpp"
+#include "render.hpp"
 
 #include "utility.cpp"
 #include "audio.cpp"
 #include "platform.cpp"
 #include "input.cpp"
+#include "render.cpp"
 
 static void game_init(void);
 static void game_quit(void);
@@ -69,22 +71,26 @@ static void entry_point(GameDesc* desc)
 
 static void game_init(void)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 static void game_quit(void)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 static void game_tick(nkF32 dt)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 static void game_draw(void)
 {
-    // @Incomplete: ...
+    nkF32 ww = NK_CAST(nkF32, get_window_width());
+    nkF32 wh = NK_CAST(nkF32, get_window_height());
+
+    set_viewport(0.0f,0.0f,ww,wh);
+    clear_screen(NK_V3_MAGENTA);
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/

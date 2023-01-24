@@ -26,7 +26,7 @@ static void*   get_context       (void);
 static void    terminate_app     (void);
 static void    fatal_error       (const nkChar* fmt, ...);
 static void    user_error        (const nkChar* fmt, ...);
-static nkVec2  get_window_size   (void);
+static iPoint  get_window_size   (void);
 static nkS32   get_window_width  (void);
 static nkS32   get_window_height (void);
 static void    set_fullscreen    (nkBool enable);

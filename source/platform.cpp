@@ -190,6 +190,9 @@ static void main_init(void)
         printf("VSync Enabled!\n");
     }
 
+    init_render_system();
+    init_audio_system();
+
     g_ctx.game_desc.init();
 
     load_program_state();
@@ -202,6 +205,9 @@ static void main_quit(void)
     save_program_state();
 
     g_ctx.game_desc.quit();
+
+    quit_audio_system();
+    quit_render_system();
 
     SDL_free(g_ctx.base_path);
 
@@ -395,13 +401,13 @@ static void user_error(const nkChar* fmt, ...)
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message_buffer, g_ctx.window);
 }
 
-static nkVec2 get_window_size(void)
+static iPoint get_window_size(void)
 {
     nkS32 width,height;
     SDL_GetWindowSize(g_ctx.window, &width,&height);
-    nkVec2 size;
-    size.x = NK_CAST(nkF32,width);
-    size.y = NK_CAST(nkF32,height);
+    iPoint size;
+    size.x = width;
+    size.y = height;
     return size;
 }
 
