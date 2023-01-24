@@ -48,9 +48,9 @@ static void imm_circle_filled (nkF32  x, nkF32  y, nkF32  r, nkS32  n, nkVec4 co
 
 static void imm_begin_texture_batch(Texture tex);
 static void imm_end_texture_batch  (void);
-static void imm_texture            (Texture tex, nkF32 x, nkF32 y,                                                  const ImmRect*      clip, nkVec4 color);
-static void imm_texture_ex         (Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect*      clip, nkVec4 color);
-static void imm_texture_batched    (             nkF32 x, nkF32 y,                                                  const ImmRect*      clip, nkVec4 color);
-static void imm_texture_batched_ex (             nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect*      clip, nkVec4 color);
+static void imm_texture            (Texture tex, nkF32 x, nkF32 y,                                                         const ImmRect* clip = NULL, nkVec4 color = NK_V4_WHITE);
+static void imm_texture_ex         (Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor = NULL, const ImmRect* clip = NULL, nkVec4 color = NK_V4_WHITE);
+static void imm_texture_batched    (             nkF32 x, nkF32 y,                                                         const ImmRect* clip = NULL, nkVec4 color = NK_V4_WHITE);
+static void imm_texture_batched_ex (             nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor = NULL, const ImmRect* clip = NULL, nkVec4 color = NK_V4_WHITE);
 
 /*////////////////////////////////////////////////////////////////////////////*/
