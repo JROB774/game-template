@@ -226,7 +226,7 @@ static GLuint shader_compile(const nkChar* source, GLint bytes, GLenum type)
 
     #if defined(BUILD_WEB)
     if(type == GL_VERTEX_SHADER) sources[0] = "#version 300 es\n#define VERT_SHADER 1\n";
-    if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 300 es\n#define FRAG_SHADER 1\n";
+    if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 300 es\n#define FRAG_SHADER 1\nprecision mediump float;\n";
     #endif // BUILD_WEB
 
     GLuint shader = glCreateShader(type);
