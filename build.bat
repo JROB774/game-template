@@ -36,7 +36,8 @@ copy depends\sdl_mixer\win32\bin\*.dll binary\win32\ > NUL
 copy depends\sdl\win32\bin\*.dll binary\win32\ > NUL
 
 pushd binary\win32
-call ../../timer.bat "cl ../../source/game.cpp %cflg% %defs% %idir% -Fe:game.exe -link %lflg% %ldir% %libs%"
+rc -i ../../redist/win32/res ../../redist/win32/res/icon.rc
+call ../../timer.bat "cl ../../source/game.cpp %cflg% %defs% %idir% -Fe:game.exe -link %lflg% %ldir% %libs% ../../redist/win32/res/icon.res"
 popd
 
 echo ----------------------------------------
