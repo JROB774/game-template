@@ -143,7 +143,7 @@ static void vertex_buffer_update(VertexBuffer vbuf, void* data, nkU64 bytes, Buf
 {
     NK_ASSERT(vbuf);
 
-    GLenum gl_type;
+    GLenum gl_type = GL_NONE;
     switch(type)
     {
         case BufferType_Static: gl_type = GL_STATIC_DRAW; break;
@@ -165,7 +165,7 @@ static void vertex_buffer_draw(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert
     glBindBuffer(GL_ARRAY_BUFFER, vbuf->handle);
 
     // Map the primitive type to the appropriate GL enum.
-    GLenum primitive;
+    GLenum primitive = GL_NONE;
     switch(draw_mode)
     {
         case DrawMode_Points: primitive = GL_POINTS; break;
@@ -183,7 +183,7 @@ static void vertex_buffer_draw(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert
         VertexAttrib* attrib = &vbuf->attribs[i];
         if(attrib->enabled)
         {
-            GLenum attrib_type;
+            GLenum attrib_type = GL_NONE;
             switch(attrib->type)
             {
                 case AttribType_SignedByte: attrib_type = GL_BYTE; break;
