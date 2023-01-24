@@ -65,6 +65,9 @@
 #include "imm_draw.cpp"
 #include "assets.cpp"
 
+static Texture g_welcome_texture;
+static nkF32   g_welcome_angle;
+
 static void game_init(void);
 static void game_quit(void);
 static void game_tick(nkF32 dt);
@@ -80,17 +83,19 @@ static void entry_point(GameDesc* desc)
 
 static void game_init(void)
 {
-    // Nothing...
+    g_welcome_texture = load_asset_texture("welcome.png", SamplerFilter_Nearest, SamplerWrap_Clamp);
 }
 
 static void game_quit(void)
 {
-    // Nothing...
+    texture_destroy(g_welcome_texture);
 }
 
 static void game_tick(nkF32 dt)
 {
-    // Nothing...
+    static nkF32 timer = 0.0f;
+    timer += dt;
+    g_welcome_angle = nk_sin_range(-0.25f, 0.25f, timer * 3.0f);
 }
 
 static void game_draw(void)
@@ -98,8 +103,19 @@ static void game_draw(void)
     nkF32 ww = NK_CAST(nkF32, get_window_width());
     nkF32 wh = NK_CAST(nkF32, get_window_height());
 
+    nkF32 tx = ww * 0.5f;
+    nkF32 ty = wh * 0.5f;
+
+    nkF32 scale = wh / (texture_get_height(g_welcome_texture) + 256.0f);
+
+    set_blend_mode(BlendMode_Alpha);
     set_viewport(0.0f,0.0f,ww,wh);
+
+    imm_set_projection(nk_orthographic(0.0f,ww,wh,0.0f));
+
     clear_screen(NK_V3_MAGENTA);
+
+    imm_texture_ex(g_welcome_texture, tx,ty, scale,scale, g_welcome_angle);
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/
