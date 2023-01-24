@@ -21,6 +21,7 @@ struct ProgramState
 
 struct PlatformContext
 {
+    GameDesc      game_desc;
     SDL_Window*   window;
     SDL_GLContext glcontext;
     nkBool        running;
@@ -169,10 +170,11 @@ static void main_init(void)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     #endif // BUILD_WEB
 
-    g_ctx.window = SDL_CreateWindow("GAME", SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED, 1280,720, WINDOW_FLAGS);
+    g_ctx.window = SDL_CreateWindow(g_ctx.game_desc.title, SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,
+        g_ctx.game_desc.window_size.x,g_ctx.game_desc.window_size.y, WINDOW_FLAGS);
     if(!g_ctx.window)
         fatal_error("Failed to create application window: %s", SDL_GetError());
-    SDL_SetWindowMinimumSize(g_ctx.window, 1280,720);
+    SDL_SetWindowMinimumSize(g_ctx.window, g_ctx.game_desc.window_min.x,g_ctx.game_desc.window_min.y);
 
     g_ctx.glcontext = SDL_GL_CreateContext(g_ctx.window);
     if(!g_ctx.glcontext)
@@ -188,7 +190,7 @@ static void main_init(void)
         printf("VSync Enabled!\n");
     }
 
-    game_init();
+    g_ctx.game_desc.init();
 
     load_program_state();
 
@@ -199,7 +201,7 @@ static void main_quit(void)
 {
     save_program_state();
 
-    game_quit();
+    g_ctx.game_desc.quit();
 
     SDL_free(g_ctx.base_path);
 
@@ -217,7 +219,7 @@ static void main_loop(void)
     static nkU64 elapsed_counter = 0;
     static nkF32 update_timer    = 0.0f;
 
-    static nkF32 dt = 1.0f / 60.0f; // We use a fixed update rate to keep things deterministic.
+    nkF32 dt = 1.0f / g_ctx.game_desc.tick_rate; // We use a fixed update rate to keep things deterministic.
 
     if(perf_frequency == 0)
     {
@@ -261,12 +263,12 @@ static void main_loop(void)
     while(update_timer >= dt)
     {
         update_input_state();
-        game_tick(dt);
+        g_ctx.game_desc.tick(dt);
         reset_input_state();
         update_timer -= dt;
     }
 
-    game_draw();
+    g_ctx.game_desc.draw();
 
     SDL_GL_SwapWindow(g_ctx.window);
 
@@ -281,7 +283,7 @@ static void main_loop(void)
     #if defined(BUILD_DEBUG)
     nkF32 current_fps = NK_CAST(nkF32,perf_frequency) / NK_CAST(nkF32,elapsed_counter);
     nkChar title_buffer[1024] = NK_ZERO_MEM;
-    snprintf(title_buffer, NK_ARRAY_SIZE(title_buffer), "GAME (FPS: %f)", current_fps);
+    snprintf(title_buffer, NK_ARRAY_SIZE(title_buffer), "%s (FPS: %f)", g_ctx.game_desc.title, current_fps);
     SDL_SetWindowTitle(g_ctx.window, title_buffer);
     #endif // BUILD_DEBUG
 
@@ -297,12 +299,15 @@ static void main_loop(void)
 #if defined(BUILD_NATIVE)
 int main(int argc, char** argv)
 {
+    entry_point(&g_ctx.game_desc);
+
     main_init();
     load_program_state();
     while(g_ctx.running)
         main_loop();
     save_program_state();
     main_quit();
+
     return 0;
 }
 #endif // BUILD_NATIVE
@@ -315,8 +320,11 @@ extern "C" void main_callback(void)
 }
 int main(int argc, char** argv)
 {
+    entry_point(&g_ctx.game_desc);
+
     EM_ASM
     (
+        // @Incomplete: Handle filling this out correctly...
         FS.mkdir("/GAME");
         FS.mount(IDBFS, {}, "/GAME");
         FS.syncfs(true, function(err)

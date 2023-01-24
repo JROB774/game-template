@@ -49,15 +49,23 @@
 #include "platform.hpp"
 #include "input.hpp"
 
+#include "utility.cpp"
+#include "audio.cpp"
+#include "platform.cpp"
+#include "input.cpp"
+
 static void game_init(void);
 static void game_quit(void);
 static void game_tick(nkF32 dt);
 static void game_draw(void);
 
-#include "utility.cpp"
-#include "audio.cpp"
-#include "platform.cpp"
-#include "input.cpp"
+static void entry_point(GameDesc* desc)
+{
+    desc->init = game_init;
+    desc->quit = game_quit;
+    desc->tick = game_tick;
+    desc->draw = game_draw;
+}
 
 static void game_init(void)
 {
