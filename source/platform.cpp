@@ -192,6 +192,9 @@ static void main_init(void)
 
     init_render_system();
     init_audio_system();
+    init_font_system();
+
+    imm_init();
 
     g_ctx.game_desc.init();
 
@@ -206,6 +209,9 @@ static void main_quit(void)
 
     g_ctx.game_desc.quit();
 
+    imm_quit();
+
+    quit_font_system();
     quit_audio_system();
     quit_render_system();
 
