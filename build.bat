@@ -18,7 +18,7 @@ set libs=SDL2main.lib SDL2.lib SDL2_mixer.lib opengl32.lib shell32.lib
 set cflg=-Zc:__cplusplus -W4 -wd4201 -wd4100 -wd4505
 set lflg=-incremental:no -ignore:4099
 
-if "%~1"=="release" (
+if "%~2"=="release" (
     set cflg=%cflg% -O2
     set lflg=%lflg% -release -subsystem:windows
 
