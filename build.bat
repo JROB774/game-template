@@ -35,6 +35,8 @@ if not exist binary\win32 mkdir binary\win32
 copy depends\sdl_mixer\win32\bin\*.dll binary\win32\ > NUL
 copy depends\sdl\win32\bin\*.dll binary\win32\ > NUL
 
+depends\makeicon\binaries\win32\makeicon -platform:win32 -sizes:256,128,96,64,48,32,16 -input:redist/win32/files.txt redist/win32/res/icon.ico
+
 pushd binary\win32
 rc -i ../../redist/win32/res ../../redist/win32/res/icon.rc
 call ../../timer.bat "cl ../../source/game.cpp %cflg% %defs% %idir% -Fe:game.exe -link %lflg% %ldir% %libs% ../../redist/win32/res/icon.res"
