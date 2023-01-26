@@ -38,7 +38,7 @@
 #include "truetype_font.hpp"
 #include "render.hpp"
 #include "imm_draw.hpp"
-#include "assets.hpp"
+#include "asset_manager.hpp"
 
 #include "utility.cpp"
 #include "platform.cpp"
@@ -47,7 +47,7 @@
 #include "truetype_font.cpp"
 #include "render.cpp"
 #include "imm_draw.cpp"
-#include "assets.cpp"
+#include "asset_manager.cpp"
 
 INTERNAL Texture g_welcome_texture;
 INTERNAL nkF32   g_welcome_angle;
@@ -59,12 +59,12 @@ GLOBAL void app_main(AppDesc* desc)
 
 GLOBAL void app_init(void)
 {
-    g_welcome_texture = load_asset_texture("welcome.png", SamplerFilter_Nearest, SamplerWrap_Clamp);
+    g_welcome_texture = asset_manager_load<Texture>("welcome.png");
 }
 
 GLOBAL void app_quit(void)
 {
-    texture_destroy(g_welcome_texture);
+    // Does nothing...
 }
 
 GLOBAL void app_tick(nkF32 dt)

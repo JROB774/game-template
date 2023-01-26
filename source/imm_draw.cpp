@@ -21,7 +21,7 @@ INTERNAL ImmContext g_imm;
 
 GLOBAL void imm_init(void)
 {
-    g_imm.shader = load_asset_shader("imm.shader");
+    g_imm.shader = asset_manager_load<Shader>("imm.shader");
     g_imm.buffer = vertex_buffer_create();
     vertex_buffer_set_stride   (g_imm.buffer, sizeof(ImmVertex));
     vertex_buffer_enable_attrib(g_imm.buffer, 0, AttribType_Float, 2, offsetof(ImmVertex, pos));
@@ -36,7 +36,6 @@ GLOBAL void imm_init(void)
 GLOBAL void imm_quit(void)
 {
     vertex_buffer_destroy(g_imm.buffer);
-    shader_destroy(g_imm.shader);
 }
 
 GLOBAL nkMat4 imm_get_projection(void)
