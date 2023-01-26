@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+:: @Setup: Change these names!
+
 if "%~1"=="win32" goto build_win32
 if "%~1"=="web" goto build_web
 if "%~1"=="tools" goto build_tools

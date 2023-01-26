@@ -336,7 +336,7 @@ int main(int argc, char** argv)
 
     EM_ASM
     (
-        // @Incomplete: Handle filling this out correctly...
+        // @Setup: Change these names!
         FS.mkdir("/GAME");
         FS.mount(IDBFS, {}, "/GAME");
         FS.syncfs(true, function(err)
