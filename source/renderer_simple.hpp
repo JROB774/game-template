@@ -62,38 +62,38 @@ GLOBAL void set_blend_mode(BlendMode blend_mode);
 GLOBAL void clear_screen_v(nkVec4 color);
 GLOBAL void clear_screen_f(nkF32 r, nkF32 g, nkF32 b, nkF32 a);
 
-GLOBAL VertexBuffer vertex_buffer_create        (void);
-GLOBAL void         vertex_buffer_destroy       (VertexBuffer vbuf);
-GLOBAL void         vertex_buffer_set_stride    (VertexBuffer vbuf, nkU64 byte_stride);
-GLOBAL void         vertex_buffer_enable_attrib (VertexBuffer vbuf, nkU32 index, AttribType type, nkU32 comps, nkU64 byte_offset);
-GLOBAL void         vertex_buffer_disable_attrib(VertexBuffer vbuf, nkU32 index);
-GLOBAL void         vertex_buffer_update        (VertexBuffer vbuf, void* data, nkU64 bytes, BufferType type);
-GLOBAL void         vertex_buffer_draw          (VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert_count);
+GLOBAL VertexBuffer create_vertex_buffer        (void);
+GLOBAL void         free_vertex_buffer          (VertexBuffer vbuf);
+GLOBAL void         set_vertex_buffer_stride    (VertexBuffer vbuf, nkU64 byte_stride);
+GLOBAL void         enable_vertex_buffer_attrib (VertexBuffer vbuf, nkU32 index, AttribType type, nkU32 comps, nkU64 byte_offset);
+GLOBAL void         disable_vertex_buffer_attrib(VertexBuffer vbuf, nkU32 index);
+GLOBAL void         update_vertex_buffer        (VertexBuffer vbuf, void* data, nkU64 bytes, BufferType type);
+GLOBAL void         draw_vertex_buffer          (VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert_count);
 
-GLOBAL RenderTarget render_target_create (nkS32 w, nkS32 h, SamplerFilter filter, SamplerWrap wrap);
-GLOBAL void         render_target_destroy(RenderTarget target);
-GLOBAL void         render_target_resize (RenderTarget target, nkS32 w, nkS32 h);
-GLOBAL void         render_target_bind   (RenderTarget target);
+GLOBAL RenderTarget create_render_target(nkS32 w, nkS32 h, SamplerFilter filter, SamplerWrap wrap);
+GLOBAL void         free_render_target  (RenderTarget target);
+GLOBAL void         resize_render_target(RenderTarget target, nkS32 w, nkS32 h);
+GLOBAL void         bind_render_target  (RenderTarget target);
 
-GLOBAL Shader  shader_create   (void* data, nkU64 bytes);
-GLOBAL void    shader_destroy  (Shader shader);
-GLOBAL void    shader_bind     (Shader shader);
-GLOBAL void    shader_set_bool (Shader shader, const nkChar* name, nkBool val);
-GLOBAL void    shader_set_int  (Shader shader, const nkChar* name, nkS32  val);
-GLOBAL void    shader_set_float(Shader shader, const nkChar* name, nkF32  val);
-GLOBAL void    shader_set_vec2 (Shader shader, const nkChar* name, nkVec2 val);
-GLOBAL void    shader_set_vec3 (Shader shader, const nkChar* name, nkVec3 val);
-GLOBAL void    shader_set_vec4 (Shader shader, const nkChar* name, nkVec4 val);
-GLOBAL void    shader_set_mat2 (Shader shader, const nkChar* name, nkMat2 val);
-GLOBAL void    shader_set_mat3 (Shader shader, const nkChar* name, nkMat3 val);
-GLOBAL void    shader_set_mat4 (Shader shader, const nkChar* name, nkMat4 val);
+GLOBAL Shader create_shader   (void* data, nkU64 bytes);
+GLOBAL void   free_shader     (Shader shader);
+GLOBAL void   bind_shader     (Shader shader);
+GLOBAL void   set_shader_bool (Shader shader, const nkChar* name, nkBool val);
+GLOBAL void   set_shader_int  (Shader shader, const nkChar* name, nkS32  val);
+GLOBAL void   set_shader_float(Shader shader, const nkChar* name, nkF32  val);
+GLOBAL void   set_shader_vec2 (Shader shader, const nkChar* name, nkVec2 val);
+GLOBAL void   set_shader_vec3 (Shader shader, const nkChar* name, nkVec3 val);
+GLOBAL void   set_shader_vec4 (Shader shader, const nkChar* name, nkVec4 val);
+GLOBAL void   set_shader_mat2 (Shader shader, const nkChar* name, nkMat2 val);
+GLOBAL void   set_shader_mat3 (Shader shader, const nkChar* name, nkMat3 val);
+GLOBAL void   set_shader_mat4 (Shader shader, const nkChar* name, nkMat4 val);
 
-GLOBAL Texture texture_create    (nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFilter filter, SamplerWrap wrap);
-GLOBAL void    texture_destroy   (Texture texture);
-GLOBAL void    texture_bind      (Texture texture, nkS32 unit);
-GLOBAL nkVec2  texture_get_size  (Texture texture);
-GLOBAL nkF32   texture_get_width (Texture texture);
-GLOBAL nkF32   texture_get_height(Texture texture);
+GLOBAL Texture create_texture    (nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFilter filter, SamplerWrap wrap);
+GLOBAL void    free_texture      (Texture texture);
+GLOBAL void    bind_texture      (Texture texture, nkS32 unit);
+GLOBAL nkVec2  get_texture_size  (Texture texture);
+GLOBAL nkF32   get_texture_width (Texture texture);
+GLOBAL nkF32   get_texture_height(Texture texture);
 
 /*////////////////////////////////////////////////////////////////////////////*/
 /*////////////////////////////////////////////////////////////////////////////*/
@@ -122,6 +122,8 @@ GLOBAL void imm_set_projection(nkMat4 projection);
 GLOBAL void imm_set_view      (nkMat4 view);
 GLOBAL void imm_set_model     (nkMat4 model);
 
+GLOBAL void imm_set_viewport(nkVec4 viewport);
+
 GLOBAL void imm_begin (DrawMode draw_mode, Texture tex, Shader shader);
 GLOBAL void imm_end   (void);
 GLOBAL void imm_vertex(ImmVertex v);
@@ -145,12 +147,12 @@ GLOBAL void imm_texture_batched_ex(             nkF32 x, nkF32 y, nkF32 sx, nkF3
 template<>
 Shader asset_load<Shader>(void* data, nkU64 size, nkBool from_npak, void* userdata)
 {
-    return shader_create(data, size);
+    return create_shader(data, size);
 }
 template<>
 void asset_free<Shader>(Asset<Shader>& asset)
 {
-    shader_destroy(asset.data);
+    free_shader(asset.data);
 }
 template<>
 const nkChar* asset_path<Shader>(void)
@@ -167,12 +169,12 @@ Texture asset_load<Texture>(void* data, nkU64 size, nkBool from_npak, void* user
     if(!pixels) return NULL;
     NK_DEFER(stbi_image_free(pixels));
 
-    return texture_create(w,h,4, pixels, SamplerFilter_Nearest, SamplerWrap_Clamp);
+    return create_texture(w,h,4, pixels, SamplerFilter_Nearest, SamplerWrap_Clamp);
 }
 template<>
 void asset_free<Texture>(Asset<Texture>& asset)
 {
-    texture_destroy(asset.data);
+    free_texture(asset.data);
 }
 template<>
 const nkChar* asset_path<Texture>(void)

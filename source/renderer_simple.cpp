@@ -136,7 +136,7 @@ GLOBAL void clear_screen_f(nkF32 r, nkF32 g, nkF32 b, nkF32 a)
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-GLOBAL VertexBuffer vertex_buffer_create(void)
+GLOBAL VertexBuffer create_vertex_buffer(void)
 {
     VertexBuffer vbuf = ALLOCATE_PRIVATE_TYPE(VertexBuffer);
     if(!vbuf)
@@ -146,21 +146,21 @@ GLOBAL VertexBuffer vertex_buffer_create(void)
     return vbuf;
 }
 
-GLOBAL void vertex_buffer_destroy(VertexBuffer vbuf)
+GLOBAL void free_vertex_buffer(VertexBuffer vbuf)
 {
     if(!vbuf) return;
     glDeleteBuffers(1, &vbuf->handle);
     free(vbuf);
 }
 
-GLOBAL void vertex_buffer_set_stride(VertexBuffer vbuf, nkU64 byte_stride)
+GLOBAL void set_vertex_buffer_stride(VertexBuffer vbuf, nkU64 byte_stride)
 {
     NK_ASSERT(vbuf);
 
     vbuf->byte_stride = byte_stride;
 }
 
-GLOBAL void vertex_buffer_enable_attrib(VertexBuffer vbuf, nkU32 index, AttribType type, nkU32 comps, nkU64 byte_offset)
+GLOBAL void enable_vertex_buffer_attrib(VertexBuffer vbuf, nkU32 index, AttribType type, nkU32 comps, nkU64 byte_offset)
 {
     NK_ASSERT(vbuf);
     NK_ASSERT(index < NK_ARRAY_SIZE(vbuf->attribs));
@@ -171,7 +171,7 @@ GLOBAL void vertex_buffer_enable_attrib(VertexBuffer vbuf, nkU32 index, AttribTy
     vbuf->attribs[index].byte_offset = byte_offset;
 }
 
-GLOBAL void vertex_buffer_disable_attrib(VertexBuffer vbuf, nkU32 index)
+GLOBAL void disable_vertex_buffer_attrib(VertexBuffer vbuf, nkU32 index)
 {
     NK_ASSERT(vbuf);
     NK_ASSERT(index < NK_ARRAY_SIZE(vbuf->attribs));
@@ -179,7 +179,7 @@ GLOBAL void vertex_buffer_disable_attrib(VertexBuffer vbuf, nkU32 index)
     vbuf->attribs[index].enabled = NK_FALSE;
 }
 
-GLOBAL void vertex_buffer_update(VertexBuffer vbuf, void* data, nkU64 bytes, BufferType type)
+GLOBAL void update_vertex_buffer(VertexBuffer vbuf, void* data, nkU64 bytes, BufferType type)
 {
     NK_ASSERT(vbuf);
 
@@ -196,7 +196,7 @@ GLOBAL void vertex_buffer_update(VertexBuffer vbuf, void* data, nkU64 bytes, Buf
     glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
 }
 
-GLOBAL void vertex_buffer_draw(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert_count)
+GLOBAL void draw_vertex_buffer(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert_count)
 {
     NK_ASSERT(vbuf);
 
@@ -245,7 +245,7 @@ GLOBAL void vertex_buffer_draw(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert
     glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
 }
 
-GLOBAL RenderTarget render_target_create(nkS32 w, nkS32 h, SamplerFilter filter, SamplerWrap wrap)
+GLOBAL RenderTarget create_render_target(nkS32 w, nkS32 h, SamplerFilter filter, SamplerWrap wrap)
 {
     RenderTarget target = ALLOCATE_PRIVATE_TYPE(RenderTarget);
     if(!target)
@@ -254,19 +254,19 @@ GLOBAL RenderTarget render_target_create(nkS32 w, nkS32 h, SamplerFilter filter,
     target->color_target = NULL;
     target->filter = filter;
     target->wrap = wrap;
-    render_target_resize(target, w, h);
+    resize_render_target(target, w, h);
     return target;
 }
 
-GLOBAL void render_target_destroy(RenderTarget target)
+GLOBAL void fre_render_target(RenderTarget target)
 {
     if(!target) return;
     glDeleteFramebuffers(1, &target->handle);
-    texture_destroy(target->color_target);
+    free_texture(target->color_target);
     free(target);
 }
 
-GLOBAL void render_target_resize(RenderTarget target, nkS32 w, nkS32 h)
+GLOBAL void resize_render_target(RenderTarget target, nkS32 w, nkS32 h)
 {
     NK_ASSERT(target);
 
@@ -274,12 +274,12 @@ GLOBAL void render_target_resize(RenderTarget target, nkS32 w, nkS32 h)
 
     // Delete the old contents (if any).
     glDeleteFramebuffers(1, &target->handle);
-    texture_destroy(target->color_target);
+    free_texture(target->color_target);
 
     glGenFramebuffers(1, &target->handle);
     glBindFramebuffer(GL_FRAMEBUFFER, target->handle);
 
-    target->color_target = texture_create(w,h, 4, NULL, target->filter, target->wrap);
+    target->color_target = create_texture(w,h, 4, NULL, target->filter, target->wrap);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target->color_target->handle, 0);
 
@@ -289,13 +289,13 @@ GLOBAL void render_target_resize(RenderTarget target, nkS32 w, nkS32 h)
     glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
 }
 
-GLOBAL void render_target_bind(RenderTarget target)
+GLOBAL void bind_render_target(RenderTarget target)
 {
     if(!target) glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
     else glBindFramebuffer(GL_FRAMEBUFFER, target->handle);
 }
 
-INTERNAL GLuint shader_compile(const nkChar* source, nkU64 bytes, GLenum type)
+INTERNAL GLuint compile_shader(const nkChar* source, nkU64 bytes, GLenum type)
 {
     const nkChar* sources[2] = { NULL, source };
     const GLint lengths[2] = { -1, NK_CAST(GLint, bytes) };
@@ -332,14 +332,14 @@ INTERNAL GLuint shader_compile(const nkChar* source, nkU64 bytes, GLenum type)
     return shader;
 }
 
-GLOBAL Shader shader_create(void* data, nkU64 bytes)
+GLOBAL Shader create_shader(void* data, nkU64 bytes)
 {
     Shader shader = ALLOCATE_PRIVATE_TYPE(Shader);
     if(!shader)
         fatal_error("Failed to allocate shader!");
 
-    GLuint vert = shader_compile(NK_CAST(const nkChar*, data), bytes, GL_VERTEX_SHADER);
-    GLuint frag = shader_compile(NK_CAST(const nkChar*, data), bytes, GL_FRAGMENT_SHADER);
+    GLuint vert = compile_shader(NK_CAST(const nkChar*, data), bytes, GL_VERTEX_SHADER);
+    GLuint frag = compile_shader(NK_CAST(const nkChar*, data), bytes, GL_FRAGMENT_SHADER);
 
     shader->program = glCreateProgram();
 
@@ -369,20 +369,20 @@ GLOBAL Shader shader_create(void* data, nkU64 bytes)
     return shader;
 }
 
-GLOBAL void shader_destroy(Shader shader)
+GLOBAL void free_shader(Shader shader)
 {
     if(!shader) return;
     glDeleteProgram(shader->program);
     free(shader);
 }
 
-GLOBAL void shader_bind(Shader shader)
+GLOBAL void bind_shader(Shader shader)
 {
     if(!shader) glUseProgram(GL_NONE);
     else glUseProgram(shader->program);
 }
 
-GLOBAL void shader_set_bool(Shader shader, const nkChar* name, nkBool val)
+GLOBAL void set_shader_bool(Shader shader, const nkChar* name, nkBool val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -390,7 +390,7 @@ GLOBAL void shader_set_bool(Shader shader, const nkChar* name, nkBool val)
     glUniform1i(location, NK_CAST(nkS32, val));
 }
 
-GLOBAL void shader_set_int(Shader shader, const nkChar* name, nkS32 val)
+GLOBAL void set_shader_int(Shader shader, const nkChar* name, nkS32 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -398,7 +398,7 @@ GLOBAL void shader_set_int(Shader shader, const nkChar* name, nkS32 val)
     glUniform1i(location, val);
 }
 
-GLOBAL void shader_set_float(Shader shader, const nkChar* name, nkF32 val)
+GLOBAL void set_shader_float(Shader shader, const nkChar* name, nkF32 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -406,7 +406,7 @@ GLOBAL void shader_set_float(Shader shader, const nkChar* name, nkF32 val)
     glUniform1f(location, val);
 }
 
-GLOBAL void shader_set_vec2(Shader shader, const nkChar* name, nkVec2 val)
+GLOBAL void set_shader_vec2(Shader shader, const nkChar* name, nkVec2 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -414,7 +414,7 @@ GLOBAL void shader_set_vec2(Shader shader, const nkChar* name, nkVec2 val)
     glUniform2fv(location, 1, val.raw);
 }
 
-GLOBAL void shader_set_vec3(Shader shader, const nkChar* name, nkVec3 val)
+GLOBAL void set_shader_vec3(Shader shader, const nkChar* name, nkVec3 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -422,7 +422,7 @@ GLOBAL void shader_set_vec3(Shader shader, const nkChar* name, nkVec3 val)
     glUniform3fv(location, 1, val.raw);
 }
 
-GLOBAL void shader_set_vec4(Shader shader, const nkChar* name, nkVec4 val)
+GLOBAL void set_shader_vec4(Shader shader, const nkChar* name, nkVec4 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -430,7 +430,7 @@ GLOBAL void shader_set_vec4(Shader shader, const nkChar* name, nkVec4 val)
     glUniform4fv(location, 1, val.raw);
 }
 
-GLOBAL void shader_set_mat2(Shader shader, const nkChar* name, nkMat2 val)
+GLOBAL void set_shader_mat2(Shader shader, const nkChar* name, nkMat2 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -438,7 +438,7 @@ GLOBAL void shader_set_mat2(Shader shader, const nkChar* name, nkMat2 val)
     glUniformMatrix2fv(location, 1, GL_FALSE, val.raw);
 }
 
-GLOBAL void shader_set_mat3(Shader shader, const nkChar* name, nkMat3 val)
+GLOBAL void set_shader_mat3(Shader shader, const nkChar* name, nkMat3 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -446,7 +446,7 @@ GLOBAL void shader_set_mat3(Shader shader, const nkChar* name, nkMat3 val)
     glUniformMatrix3fv(location, 1, GL_FALSE, val.raw);
 }
 
-GLOBAL void shader_set_mat4(Shader shader, const nkChar* name, nkMat4 val)
+GLOBAL void set_shader_mat4(Shader shader, const nkChar* name, nkMat4 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -513,7 +513,7 @@ INTERNAL GLenum bpp_to_gl_format(nkS32 bpp)
     return GL_NONE;
 }
 
-GLOBAL Texture texture_create(nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFilter filter, SamplerWrap wrap)
+GLOBAL Texture create_texture(nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFilter filter, SamplerWrap wrap)
 {
     Texture texture = ALLOCATE_PRIVATE_TYPE(Texture);
     if(!texture)
@@ -543,33 +543,33 @@ GLOBAL Texture texture_create(nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFi
     return texture;
 }
 
-GLOBAL void texture_destroy(Texture texture)
+GLOBAL void free_texture(Texture texture)
 {
     if(!texture) return;
     glDeleteTextures(1, &texture->handle);
     free(texture);
 }
 
-GLOBAL void texture_bind(Texture texture, nkS32 unit)
+GLOBAL void bind_texture(Texture texture, nkS32 unit)
 {
     glActiveTexture(GL_TEXTURE0 + unit);
     if(!texture) glBindTexture(GL_TEXTURE_2D, GL_NONE);
     else glBindTexture(GL_TEXTURE_2D, texture->handle);
 }
 
-GLOBAL nkVec2 texture_get_size(Texture texture)
+GLOBAL nkVec2 get_texture_size(Texture texture)
 {
     NK_ASSERT(texture);
     return texture->size;
 }
 
-GLOBAL nkF32 texture_get_width (Texture texture)
+GLOBAL nkF32 get_texture_width(Texture texture)
 {
     NK_ASSERT(texture);
     return texture->size.x;
 }
 
-GLOBAL nkF32 texture_get_height(Texture texture)
+GLOBAL nkF32 get_texture_height(Texture texture)
 {
     NK_ASSERT(texture);
     return texture->size.y;
@@ -600,11 +600,11 @@ INTERNAL ImmContext g_imm;
 GLOBAL void imm_init(void)
 {
     g_imm.shader = asset_manager_load<Shader>("simple_basic.shader");
-    g_imm.buffer = vertex_buffer_create();
-    vertex_buffer_set_stride   (g_imm.buffer, sizeof(ImmVertex));
-    vertex_buffer_enable_attrib(g_imm.buffer, 0, AttribType_Float, 2, offsetof(ImmVertex, pos));
-    vertex_buffer_enable_attrib(g_imm.buffer, 1, AttribType_Float, 2, offsetof(ImmVertex, tex));
-    vertex_buffer_enable_attrib(g_imm.buffer, 2, AttribType_Float, 4, offsetof(ImmVertex, col));
+    g_imm.buffer = create_vertex_buffer();
+    set_vertex_buffer_stride   (g_imm.buffer, sizeof(ImmVertex));
+    enable_vertex_buffer_attrib(g_imm.buffer, 0, AttribType_Float, 2, offsetof(ImmVertex, pos));
+    enable_vertex_buffer_attrib(g_imm.buffer, 1, AttribType_Float, 2, offsetof(ImmVertex, tex));
+    enable_vertex_buffer_attrib(g_imm.buffer, 2, AttribType_Float, 4, offsetof(ImmVertex, col));
 
     g_imm.projection = nk_m4_identity();
     g_imm.view       = nk_m4_identity();
@@ -613,7 +613,7 @@ GLOBAL void imm_init(void)
 
 GLOBAL void imm_quit(void)
 {
-    vertex_buffer_destroy(g_imm.buffer);
+    free_vertex_buffer(g_imm.buffer);
 }
 
 GLOBAL nkMat4 imm_get_projection(void)
@@ -646,6 +646,11 @@ GLOBAL void imm_set_model(nkMat4 model)
     g_imm.model = model;
 }
 
+GLOBAL void imm_set_viewport(nkVec4 viewport)
+{
+    set_viewport(viewport.x,viewport.y,viewport.z,viewport.w);
+}
+
 GLOBAL void imm_begin(DrawMode draw_mode, Texture tex, Shader shader)
 {
     g_imm.draw_mode = draw_mode;
@@ -661,16 +666,16 @@ GLOBAL void imm_begin(DrawMode draw_mode, Texture tex, Shader shader)
 
 GLOBAL void imm_end(void)
 {
-    texture_bind(g_imm.bound_texture, 0);
-    shader_bind(g_imm.bound_shader);
+    bind_texture(g_imm.bound_texture, 0);
+    bind_shader(g_imm.bound_shader);
 
-    shader_set_bool(g_imm.bound_shader, "u_usetex",    (g_imm.bound_texture != NULL));
-    shader_set_mat4(g_imm.bound_shader, "u_projection", g_imm.projection);
-    shader_set_mat4(g_imm.bound_shader, "u_view",       g_imm.view);
-    shader_set_mat4(g_imm.bound_shader, "u_model",      g_imm.model);
+    set_shader_bool(g_imm.bound_shader, "u_usetex",    (g_imm.bound_texture != NULL));
+    set_shader_mat4(g_imm.bound_shader, "u_projection", g_imm.projection);
+    set_shader_mat4(g_imm.bound_shader, "u_view",       g_imm.view);
+    set_shader_mat4(g_imm.bound_shader, "u_model",      g_imm.model);
 
-    vertex_buffer_update(g_imm.buffer, g_imm.verts, g_imm.vert_count * sizeof(ImmVertex), BufferType_Dynamic);
-    vertex_buffer_draw(g_imm.buffer, g_imm.draw_mode, g_imm.vert_count);
+    update_vertex_buffer(g_imm.buffer, g_imm.verts, g_imm.vert_count * sizeof(ImmVertex), BufferType_Dynamic);
+    draw_vertex_buffer(g_imm.buffer, g_imm.draw_mode, g_imm.vert_count);
 }
 
 GLOBAL void imm_vertex(ImmVertex v)
@@ -766,8 +771,8 @@ GLOBAL void imm_end_texture_batch(void)
 
 GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 color)
 {
-    nkF32 w = texture_get_width(tex);
-    nkF32 h = texture_get_height(tex);
+    nkF32 w = get_texture_width(tex);
+    nkF32 h = get_texture_height(tex);
 
     nkF32 s1 = 0;
     nkF32 t1 = 0;
@@ -802,8 +807,8 @@ GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmRect* clip, nkVe
 
 GLOBAL void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip, nkVec4 color)
 {
-    nkF32 w = texture_get_width(tex);
-    nkF32 h = texture_get_height(tex);
+    nkF32 w = get_texture_width(tex);
+    nkF32 h = get_texture_height(tex);
 
     nkF32 s1 = 0;
     nkF32 t1 = 0;
@@ -860,8 +865,8 @@ GLOBAL void imm_texture_batched(nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 co
 {
     NK_ASSERT(g_imm.bound_texture);
 
-    nkF32 w = texture_get_width(g_imm.bound_texture);
-    nkF32 h = texture_get_height(g_imm.bound_texture);
+    nkF32 w = get_texture_width(g_imm.bound_texture);
+    nkF32 h = get_texture_height(g_imm.bound_texture);
 
     nkF32 s1 = 0;
     nkF32 t1 = 0;
@@ -898,8 +903,8 @@ GLOBAL void imm_texture_batched_ex(nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 a
 {
     NK_ASSERT(g_imm.bound_texture);
 
-    nkF32 w = texture_get_width(g_imm.bound_texture);
-    nkF32 h = texture_get_height(g_imm.bound_texture);
+    nkF32 w = get_texture_width(g_imm.bound_texture);
+    nkF32 h = get_texture_height(g_imm.bound_texture);
 
     nkF32 s1 = 0;
     nkF32 t1 = 0;

@@ -207,7 +207,7 @@ GLOBAL TrueTypeFont create_truetype_font(const TrueTypeFontDesc& desc)
     #endif // USE_RENDERER_ADVANCED
 
     #if defined(USE_RENDERER_SIMPLE)
-    font->atlas_texture = texture_create(FONT_ATLAS_SIZE,FONT_ATLAS_SIZE, 1, font->atlas_pixels, SamplerFilter_Linear, SamplerWrap_Clamp);
+    font->atlas_texture = create_texture(FONT_ATLAS_SIZE,FONT_ATLAS_SIZE, 1, font->atlas_pixels, SamplerFilter_Linear, SamplerWrap_Clamp);
     #endif // USE_RENDERER_SIMPLE
 
     font->current_size = desc.px_sizes[0];
@@ -219,14 +219,7 @@ GLOBAL void free_truetype_font(TrueTypeFont font)
 {
     NK_ASSERT(font);
 
-    #if defined(USE_RENDERER_ADVANCED)
     free_texture(font->atlas_texture);
-    #endif // USE_RENDERER_ADVANCED
-
-    #if defined(USE_RENDERER_SIMPLE)
-    texture_destroy(font->atlas_texture);
-    #endif // USE_RENDERER_SIMPLE
-
     NK_FREE(font->atlas_pixels);
 
     nk_array_free(&font->ranges);
@@ -259,9 +252,9 @@ GLOBAL void set_truetype_font_size(TrueTypeFont font, nkS32 new_size)
         // @Improve: Add a way of updating a texture's pixels without fully recrating it...
 
         // We need to update the texture with the new font data.
+        free_texture(font->atlas_texture);
 
         #if defined(USE_RENDERER_ADVANCED)
-        free_texture(font->atlas_texture);
         TextureDesc texture_desc;
         texture_desc.format = TextureFormat_R;
         texture_desc.width  = FONT_ATLAS_SIZE;
@@ -271,8 +264,7 @@ GLOBAL void set_truetype_font_size(TrueTypeFont font, nkS32 new_size)
         #endif // USE_RENDERER_ADVANCED
 
         #if defined(USE_RENDERER_SIMPLE)
-        texture_destroy(font->atlas_texture);
-        font->atlas_texture = texture_create(FONT_ATLAS_SIZE,FONT_ATLAS_SIZE, 1, font->atlas_pixels, SamplerFilter_Linear, SamplerWrap_Clamp);
+        font->atlas_texture = create_texture(FONT_ATLAS_SIZE,FONT_ATLAS_SIZE, 1, font->atlas_pixels, SamplerFilter_Linear, SamplerWrap_Clamp);
         #endif // USE_RENDERER_SIMPLE
     }
 }
@@ -533,10 +525,10 @@ GLOBAL void draw_truetype_text(TrueTypeFont font, nkF32 x, nkF32 y, const wchar_
             nkF32 x2 = x1         + glyph.info.width;
             nkF32 y2 = y1         + glyph.info.height;
 
-            nkF32 s1 =      (glyph.bounds.x / texture_get_width(font->atlas_texture));
-            nkF32 t1 =      (glyph.bounds.y / texture_get_height(font->atlas_texture));
-            nkF32 s2 = s1 + (glyph.bounds.w / texture_get_width(font->atlas_texture));
-            nkF32 t2 = t1 + (glyph.bounds.h / texture_get_height(font->atlas_texture));
+            nkF32 s1 =      (glyph.bounds.x / get_texture_width(font->atlas_texture));
+            nkF32 t1 =      (glyph.bounds.y / get_texture_height(font->atlas_texture));
+            nkF32 s2 = s1 + (glyph.bounds.w / get_texture_width(font->atlas_texture));
+            nkF32 t2 = t1 + (glyph.bounds.h / get_texture_height(font->atlas_texture));
 
             imm_vertex({ { x1,y2 }, { s1,t2 }, color });
             imm_vertex({ { x1,y1 }, { s1,t1 }, color });

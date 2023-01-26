@@ -79,10 +79,10 @@ GLOBAL void app_draw(void)
     nkF32 tx = ww * 0.5f;
     nkF32 ty = wh * 0.5f;
 
-    nkF32 scale = wh / (texture_get_height(texture) + 256.0f);
+    nkF32 scale = wh / (get_texture_height(texture) + 256.0f);
 
     imm_set_projection(nk_orthographic(0.0f,ww,wh,0.0f));
-    set_viewport(0.0f,0.0f,ww,wh);
+    imm_set_viewport({ 0.0f,0.0f,ww,wh });
 
     imm_texture_ex(texture, tx,ty, scale,scale, g_welcome_angle, NULL);
 }
