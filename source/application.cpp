@@ -49,22 +49,21 @@
 #include "imm_draw.cpp"
 #include "asset_manager.cpp"
 
-INTERNAL Texture g_welcome_texture;
-INTERNAL nkF32   g_welcome_angle;
+INTERNAL nkF32 g_welcome_angle;
 
 GLOBAL void app_main(AppDesc* desc)
 {
-    // Does nothing, we are using the defaults...
+    // Nothing...
 }
 
 GLOBAL void app_init(void)
 {
-    g_welcome_texture = asset_manager_load<Texture>("welcome.png");
+    // Nothing...
 }
 
 GLOBAL void app_quit(void)
 {
-    // Does nothing...
+    // Nothing...
 }
 
 GLOBAL void app_tick(nkF32 dt)
@@ -76,13 +75,15 @@ GLOBAL void app_tick(nkF32 dt)
 
 GLOBAL void app_draw(void)
 {
+    Texture texture = asset_manager_load<Texture>("welcome.png");
+
     nkF32 ww = NK_CAST(nkF32, get_window_width());
     nkF32 wh = NK_CAST(nkF32, get_window_height());
 
     nkF32 tx = ww * 0.5f;
     nkF32 ty = wh * 0.5f;
 
-    nkF32 scale = wh / (texture_get_height(g_welcome_texture) + 256.0f);
+    nkF32 scale = wh / (texture_get_height(texture) + 256.0f);
 
     set_blend_mode(BlendMode_Alpha);
     set_viewport(0.0f,0.0f,ww,wh);
@@ -91,7 +92,7 @@ GLOBAL void app_draw(void)
 
     clear_screen(NK_V3_MAGENTA);
 
-    imm_texture_ex(g_welcome_texture, tx,ty, scale,scale, g_welcome_angle);
+    imm_texture_ex(texture, tx,ty, scale,scale, g_welcome_angle);
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/
