@@ -1,13 +1,10 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-#define STB_TRUETYPE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
-
 #define NK_FILESYS_IMPLEMENTATION
 #define NK_NPAK_IMPLEMENTATION
 
 #define STB_IMAGE_STATIC
-#define STBTT_STATIC
 #define GLEW_STATIC
 #define NK_STATIC
 
@@ -26,17 +23,19 @@
 #include <nk_math.h>
 #include <nk_filesys.h>
 #include <nk_npak.h>
+#include <nk_array.h>
 #include <nk_string.h>
+#include <nk_hashmap.h>
+#include <nk_defer.h>
 
 #include <stb_image.h>
-#include <stb_truetype.h>
 
 #include "utility.hpp"
 #include "application.hpp"
 #include "platform.hpp"
 #include "audio.hpp"
 #include "input.hpp"
-#include "font.hpp"
+#include "truetype_font.hpp"
 #include "render.hpp"
 #include "imm_draw.hpp"
 #include "assets.hpp"
@@ -45,7 +44,7 @@
 #include "platform.cpp"
 #include "audio.cpp"
 #include "input.cpp"
-#include "font.cpp"
+#include "truetype_font.cpp"
 #include "render.cpp"
 #include "imm_draw.cpp"
 #include "assets.cpp"

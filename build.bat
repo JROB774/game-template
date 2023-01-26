@@ -12,9 +12,9 @@ goto end
 echo ----------------------------------------
 
 set defs=-D BUILD_NATIVE -D _CRT_SECURE_NO_WARNINGS
-set idir=-I ../../depends/sdl/win32/include -I ../../depends/sdl_mixer/win32/include -I ../../depends/nksdk -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb
-set ldir=-libpath:../../depends/sdl/win32/lib -libpath:../../depends/sdl_mixer/win32/lib
-set libs=SDL2main.lib SDL2.lib SDL2_mixer.lib opengl32.lib shell32.lib
+set idir=-I ../../depends/sdl/win32/include -I ../../depends/sdl_mixer/win32/include -I ../../depends/freetype/win32/include -I ../../depends/nksdk -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb
+set ldir=-libpath:../../depends/sdl/win32/lib -libpath:../../depends/sdl_mixer/win32/lib -libpath:../../depends/freetype/win32/lib
+set libs=SDL2main.lib SDL2.lib SDL2_mixer.lib freetype.lib opengl32.lib shell32.lib
 set cflg=-Zc:__cplusplus -W4 -wd4201 -wd4100 -wd4505
 set lflg=-incremental:no -ignore:4099
 
@@ -55,7 +55,7 @@ call depends\emsdk\emsdk_env.bat
 
 set defs=-D BUILD_WEB
 set idir=-I ../../depends/nksdk -I ../../depends/stb
-set libs=-s WASM=1 -s USE_SDL=2 -s USE_SDL_MIXER=2 -s USE_OGG=1 -s USE_VORBIS=1 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 -lidbfs.js
+set libs=-s WASM=1 -s USE_SDL=2 -s USE_SDL_MIXER=2 -s USE_OGG=1 -s USE_VORBIS=1 -s USE_FREETYPE=1 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 -lidbfs.js
 set cflg=-std=c++11
 set lflg=--preload-file ../../assets -s EXPORTED_FUNCTIONS="['_main', '_main_callback']" -s EXPORTED_RUNTIME_METHODS="['ccall']" -s ALLOW_MEMORY_GROWTH
 

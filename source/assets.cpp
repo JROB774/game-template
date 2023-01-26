@@ -84,8 +84,12 @@ GLOBAL Music load_asset_music(const nkChar* name)
     return create_music_from_file(buffer);
 }
 
-GLOBAL Font load_asset_font(const nkChar* name, nkF32 px_height)
+GLOBAL TrueTypeFont load_asset_font(const nkChar* name, nkF32 px_height)
 {
+    // @Incomplete: ...
+    return NULL;
+
+    /*
     nkChar buffer[1024] = NK_ZERO_MEM;
 
     #if defined(BUILD_NATIVE)
@@ -96,7 +100,7 @@ GLOBAL Font load_asset_font(const nkChar* name, nkF32 px_height)
         nkU64 file_size;
         void* file_data = nk_npak_get_file_data(&g_npak, buffer, &file_size);
         if(file_data)
-            return font_create(file_data, NK_FALSE, px_height);
+            return create_truetype_font(file_data, NK_FALSE, px_height);
     }
     #endif // BUILD_NATIVE
 
@@ -110,6 +114,7 @@ GLOBAL Font load_asset_font(const nkChar* name, nkF32 px_height)
         fatal_error("Failed to load font from file: %s", buffer);
     Font font = font_create(file_content.data, NK_TRUE, px_height);
     return font;
+    */
 }
 
 GLOBAL Texture load_asset_texture(const nkChar* name, SamplerFilter filter, SamplerWrap wrap)
