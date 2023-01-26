@@ -59,6 +59,7 @@ NK_ENUM(GamepadAxis, nkS32)
 };
 
 static void init_input_system   (void);
+static void quit_input_system   (void);
 static void process_input_events(void* event);
 static void update_input_state  (void);
 static void reset_input_state   (void);

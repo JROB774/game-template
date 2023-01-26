@@ -193,6 +193,7 @@ static void main_init(void)
     init_render_system();
     init_audio_system();
     init_font_system();
+    init_input_system();
 
     imm_init();
 
@@ -211,6 +212,7 @@ static void main_quit(void)
 
     imm_quit();
 
+    quit_input_system();
     quit_font_system();
     quit_audio_system();
     quit_render_system();
