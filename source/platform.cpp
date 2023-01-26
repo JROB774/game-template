@@ -166,16 +166,7 @@ INTERNAL void main_init(void)
         fatal_error("Failed to initialize SDL systems: %s", SDL_GetError());
     }
 
-    #if defined(BUILD_NATIVE)
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    #endif // BUILD_NATIVE
-    #if defined(BUILD_WEB)
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    #endif // BUILD_WEB
+    setup_renderer_platform();
 
     g_ctx.window = SDL_CreateWindow(g_ctx.app_desc.title, SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,
         g_ctx.app_desc.window_size.x,g_ctx.app_desc.window_size.y, WINDOW_FLAGS);
@@ -289,9 +280,7 @@ INTERNAL void main_loop(void)
         update_timer -= dt;
     }
 
-    imm_begin_frame();
-    app_draw();
-    imm_end_frame();
+    do_render_frame();
 
     SDL_GL_SwapWindow(g_ctx.window);
 

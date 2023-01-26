@@ -8,6 +8,8 @@
 #define GLEW_STATIC
 #define NK_STATIC
 
+#define USE_RENDERER_ADVANCED
+
 #include <nk_define.h>
 #include <nk_math.h>
 #include <nk_filesys.h>
@@ -32,8 +34,7 @@
 #include "audio.hpp"
 #include "input.hpp"
 #include "truetype_font.hpp"
-#include "render.hpp"
-#include "imm_draw.hpp"
+#include "renderer.hpp"
 #include "asset_manager.hpp"
 
 #include "utility.cpp"
@@ -41,8 +42,7 @@
 #include "audio.cpp"
 #include "input.cpp"
 #include "truetype_font.cpp"
-#include "render.cpp"
-#include "imm_draw.cpp"
+#include "renderer.cpp"
 #include "asset_manager.cpp"
 
 INTERNAL nkF32 g_welcome_angle;
