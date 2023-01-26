@@ -3,7 +3,6 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 
-#define NK_PRINT_IMPLEMENTATION
 #define NK_FILESYS_IMPLEMENTATION
 #define NK_NPAK_IMPLEMENTATION
 
@@ -27,30 +26,15 @@
 #include <nk_math.h>
 #include <nk_filesys.h>
 #include <nk_npak.h>
-#include <nk_defer.h>
-#include <nk_print.h>
-#include <nk_hashmap.h>
-#include <nk_hashset.h>
-#include <nk_array.h>
 #include <nk_string.h>
 
 #include <stb_image.h>
 #include <stb_truetype.h>
 
-#include <SDL.h>
-#include <SDL_mixer.h>
-
-#if defined(BUILD_NATIVE)
-#include <glew.c>
-#endif // BUILD_NATIVE
-#if defined(BUILD_WEB)
-#include <GLES2/gl2.h>
-#endif // BUILD_WEB
-
 #include "utility.hpp"
 #include "application.hpp"
-#include "audio.hpp"
 #include "platform.hpp"
+#include "audio.hpp"
 #include "input.hpp"
 #include "font.hpp"
 #include "render.hpp"
@@ -58,8 +42,8 @@
 #include "assets.hpp"
 
 #include "utility.cpp"
-#include "audio.cpp"
 #include "platform.cpp"
+#include "audio.cpp"
 #include "input.cpp"
 #include "font.cpp"
 #include "render.cpp"

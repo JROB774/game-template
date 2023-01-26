@@ -1,5 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
+#include <SDL.h>
+#include <SDL_mixer.h>
+
 INTERNAL constexpr nkU32 WINDOW_FLAGS = SDL_WINDOW_HIDDEN|SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL;
 
 INTERNAL constexpr const nkChar* PROGRAM_STATE_FILE = "state.dat";

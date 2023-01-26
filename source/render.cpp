@@ -1,5 +1,13 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
+#if defined(BUILD_NATIVE)
+#include <glew.c>
+#endif // BUILD_NATIVE
+
+#if defined(BUILD_WEB)
+#include <GLES2/gl2.h>
+#endif // BUILD_WEB
+
 INTERNAL GLuint g_vao;
 
 GLOBAL void init_render_system(void)
