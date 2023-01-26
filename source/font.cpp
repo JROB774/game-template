@@ -1,6 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-static NKCONSTEXPR nkS32 FONT_ATLAS_SIZE = 1024;
+INTERNAL constexpr nkS32 FONT_ATLAS_SIZE = 1024;
 
 DEFINE_PRIVATE_TYPE(Font)
 {
@@ -11,19 +11,19 @@ DEFINE_PRIVATE_TYPE(Font)
     nkF32            px_height;
 };
 
-static Shader g_textshader;
+INTERNAL Shader g_textshader;
 
-static void init_font_system(void)
+GLOBAL void init_font_system(void)
 {
     g_textshader = load_asset_shader("text.shader");
 }
 
-static void quit_font_system(void)
+GLOBAL void quit_font_system(void)
 {
     shader_destroy(g_textshader);
 }
 
-static Font font_create(void* data, nkBool owns_data, nkF32 px_height)
+GLOBAL Font font_create(void* data, nkBool owns_data, nkF32 px_height)
 {
     Font font = ALLOCATE_PRIVATE_TYPE(Font);
     if(!font)
@@ -50,7 +50,7 @@ static Font font_create(void* data, nkBool owns_data, nkF32 px_height)
     return font;
 }
 
-static void font_destroy(Font font)
+GLOBAL void font_destroy(Font font)
 {
     if(!font) return;
     texture_destroy(font->atlas);
@@ -59,7 +59,7 @@ static void font_destroy(Font font)
     NK_FREE(font);
 }
 
-static stbtt_aligned_quad font_get_glyph_quad(Font font, nkChar c, nkF32* x, nkF32* y)
+GLOBAL stbtt_aligned_quad font_get_glyph_quad(Font font, nkChar c, nkF32* x, nkF32* y)
 {
     NK_ASSERT(font);
 
@@ -75,7 +75,7 @@ static stbtt_aligned_quad font_get_glyph_quad(Font font, nkChar c, nkF32* x, nkF
     return q;
 }
 
-static nkVec2 font_get_text_bounds(Font font, const nkChar* text)
+GLOBAL nkVec2 font_get_text_bounds(Font font, const nkChar* text)
 {
     NK_ASSERT(font);
 
@@ -112,25 +112,25 @@ static nkVec2 font_get_text_bounds(Font font, const nkChar* text)
     return bounds;
 }
 
-static nkF32 font_get_text_width(Font font, const nkChar* text)
+GLOBAL nkF32 font_get_text_width(Font font, const nkChar* text)
 {
     NK_ASSERT(font);
     return font_get_text_bounds(font, text).x;
 }
 
-static nkF32 font_get_text_height(Font font, const nkChar* text)
+GLOBAL nkF32 font_get_text_height(Font font, const nkChar* text)
 {
     NK_ASSERT(font);
     return font_get_text_bounds(font, text).y;
 }
 
-static nkF32 font_get_px_height(Font font)
+GLOBAL nkF32 font_get_px_height(Font font)
 {
     NK_ASSERT(font);
     return font->px_height;
 }
 
-static void font_draw_text(Font font, nkF32 x, nkF32 y, const nkChar* text, nkVec4 color)
+GLOBAL void font_draw_text(Font font, nkF32 x, nkF32 y, const nkChar* text, nkVec4 color)
 {
     NK_ASSERT(font);
     NK_ASSERT(text);
@@ -166,7 +166,7 @@ static void font_draw_text(Font font, nkF32 x, nkF32 y, const nkChar* text, nkVe
     imm_end();
 }
 
-static void font_draw_char(Font font, nkF32 x, nkF32 y, nkChar chr, nkVec4 color)
+GLOBAL void font_draw_char(Font font, nkF32 x, nkF32 y, nkChar chr, nkVec4 color)
 {
     nkChar buffer[2] = { chr, '\0' };
     font_draw_text(font, x,y, buffer, color);

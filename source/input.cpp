@@ -1,8 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-static constexpr nkS16 INPUT_GAMEPAD_STICK_DEADZONE = 12000;
+INTERNAL constexpr nkS16 INPUT_GAMEPAD_STICK_DEADZONE = 12000;
 
-static const SDL_Scancode KEYCODE_TO_SDL[] =
+INTERNAL const SDL_Scancode KEYCODE_TO_SDL[] =
 {
     SDL_SCANCODE_UNKNOWN,
     SDL_SCANCODE_F1, SDL_SCANCODE_F2, SDL_SCANCODE_F3, SDL_SCANCODE_F4, SDL_SCANCODE_F5, SDL_SCANCODE_F6,
@@ -29,12 +29,12 @@ static const SDL_Scancode KEYCODE_TO_SDL[] =
     SDL_SCANCODE_LALT, SDL_SCANCODE_RALT
 };
 
-static const nkS32 MOUSE_BUTTON_TO_SDL[] =
+INTERNAL const nkS32 MOUSE_BUTTON_TO_SDL[] =
 {
     0, SDL_BUTTON_LEFT, SDL_BUTTON_MIDDLE, SDL_BUTTON_RIGHT
 };
 
-static const SDL_GameControllerButton GAMEPAD_BUTTON_TO_SDL[] =
+INTERNAL const SDL_GameControllerButton GAMEPAD_BUTTON_TO_SDL[] =
 {
     SDL_CONTROLLER_BUTTON_INVALID,
     SDL_CONTROLLER_BUTTON_DPAD_UP, SDL_CONTROLLER_BUTTON_DPAD_RIGHT, SDL_CONTROLLER_BUTTON_DPAD_DOWN, SDL_CONTROLLER_BUTTON_DPAD_LEFT,
@@ -45,7 +45,7 @@ static const SDL_GameControllerButton GAMEPAD_BUTTON_TO_SDL[] =
     SDL_CONTROLLER_BUTTON_START,
 };
 
-static const SDL_GameControllerAxis GAMEPAD_AXIS_TO_SDL[] =
+INTERNAL const SDL_GameControllerAxis GAMEPAD_AXIS_TO_SDL[] =
 {
     SDL_CONTROLLER_AXIS_INVALID,
     SDL_CONTROLLER_AXIS_LEFTX, SDL_CONTROLLER_AXIS_RIGHTX,
@@ -75,9 +75,9 @@ struct InputState
     nkChar text_input[256];
 };
 
-static InputState g_input;
+INTERNAL InputState g_input;
 
-static void remove_gamepad(void)
+INTERNAL void remove_gamepad(void)
 {
     if(g_input.gamepad)
     {
@@ -86,7 +86,7 @@ static void remove_gamepad(void)
     }
 }
 
-static void add_gamepad(void)
+INTERNAL void add_gamepad(void)
 {
     // Search for a plugged in gamepad and if there is one use it.
     remove_gamepad();
@@ -103,17 +103,17 @@ static void add_gamepad(void)
     }
 }
 
-static void init_input_system(void)
+GLOBAL void init_input_system(void)
 {
     // Does nothing...
 }
 
-static void quit_input_system(void)
+GLOBAL void quit_input_system(void)
 {
     remove_gamepad();
 }
 
-static void process_input_events(void* event)
+GLOBAL void process_input_events(void* event)
 {
     SDL_Event* sdl_event = NK_CAST(SDL_Event*, event);
     switch(sdl_event->type)
@@ -132,7 +132,7 @@ static void process_input_events(void* event)
     }
 }
 
-static void update_input_state()
+GLOBAL void update_input_state()
 {
     // Update the keyboard state.
     memcpy(g_input.prev_key_state, g_input.curr_key_state, sizeof(g_input.prev_key_state));
@@ -181,7 +181,7 @@ static void update_input_state()
     }
 }
 
-static void reset_input_state(void)
+GLOBAL void reset_input_state(void)
 {
     memset(g_input.text_input, 0, sizeof(g_input.text_input));
 }
@@ -190,7 +190,7 @@ static void reset_input_state(void)
 // Text Input
 //
 
-static nkChar* get_current_text_input(void)
+GLOBAL nkChar* get_current_text_input(void)
 {
     return g_input.text_input;
 }
@@ -199,61 +199,61 @@ static nkChar* get_current_text_input(void)
 // Keyboard
 //
 
-static nkBool is_key_down(KeyCode code)
+GLOBAL nkBool is_key_down(KeyCode code)
 {
     if(code == KeyCode_Invalid) return NK_FALSE;
     return (g_input.curr_key_state[code] != 0);
 }
 
-static nkBool is_key_up(KeyCode code)
+GLOBAL nkBool is_key_up(KeyCode code)
 {
     if(code == KeyCode_Invalid) return NK_FALSE;
     return (g_input.curr_key_state[code] == 0);
 }
 
-static nkBool is_key_pressed(KeyCode code)
+GLOBAL nkBool is_key_pressed(KeyCode code)
 {
     if(code == KeyCode_Invalid) return NK_FALSE;
     return (g_input.curr_key_state[code] != 0 &&
             g_input.prev_key_state[code] == 0);
 }
 
-static nkBool is_key_released(KeyCode code)
+GLOBAL nkBool is_key_released(KeyCode code)
 {
     if(code == KeyCode_Invalid) return NK_FALSE;
     return (g_input.curr_key_state[code] == 0 &&
             g_input.prev_key_state[code] != 0);
 }
 
-static nkBool is_any_key_down(void)
+GLOBAL nkBool is_any_key_down(void)
 {
     for(nkS32 i=0; i<NK_CAST(nkS32, KeyCode_TOTAL); ++i)
         if(is_key_down(NK_CAST(KeyCode, i))) return NK_TRUE;
     return NK_FALSE;
 }
 
-static nkBool is_any_key_up(void)
+GLOBAL nkBool is_any_key_up(void)
 {
     for(nkS32 i=0; i<NK_CAST(nkS32, KeyCode_TOTAL); ++i)
         if(is_key_up(NK_CAST(KeyCode, i))) return NK_TRUE;
     return NK_FALSE;
 }
 
-static nkBool is_any_key_pressed(void)
+GLOBAL nkBool is_any_key_pressed(void)
 {
     for(nkS32 i=0; i<NK_CAST(nkS32, KeyCode_TOTAL); ++i)
         if(is_key_pressed(NK_CAST(KeyCode, i))) return NK_TRUE;
     return NK_FALSE;
 }
 
-static nkBool is_any_key_released(void)
+GLOBAL nkBool is_any_key_released(void)
 {
     for(nkS32 i=0; i<NK_CAST(nkS32, KeyCode_TOTAL); ++i)
         if(is_key_released(NK_CAST(KeyCode, i))) return NK_TRUE;
     return NK_FALSE;
 }
 
-static nkBool is_key_mod_active(void)
+GLOBAL nkBool is_key_mod_active(void)
 {
     return (is_key_down(KeyCode_LeftShift) || is_key_down(KeyCode_RightShift) ||
             is_key_down(KeyCode_LeftCtrl) || is_key_down(KeyCode_RightCtrl) ||
@@ -264,76 +264,76 @@ static nkBool is_key_mod_active(void)
 // Mouse
 //
 
-static nkBool is_mouse_button_down(MouseButton button)
+GLOBAL nkBool is_mouse_button_down(MouseButton button)
 {
     if(button == MouseButton_Invalid) return NK_FALSE;
     return (g_input.curr_mouse_state[button] != 0);
 }
 
-static nkBool is_mouse_button_up(MouseButton button)
+GLOBAL nkBool is_mouse_button_up(MouseButton button)
 {
     if(button == MouseButton_Invalid) return NK_FALSE;
     return (g_input.curr_mouse_state[button] == 0);
 }
 
-static nkBool is_mouse_button_pressed(MouseButton button)
+GLOBAL nkBool is_mouse_button_pressed(MouseButton button)
 {
     if(button == MouseButton_Invalid) return NK_FALSE;
     return (g_input.curr_mouse_state[button] != 0 &&
             g_input.prev_mouse_state[button] == 0);
 }
 
-static nkBool is_mouse_button_released(MouseButton button)
+GLOBAL nkBool is_mouse_button_released(MouseButton button)
 {
     if(button == MouseButton_Invalid) return NK_FALSE;
     return (g_input.curr_mouse_state[button] == 0 &&
             g_input.prev_mouse_state[button] != 0);
 }
 
-static nkBool is_any_mouse_button_down(void)
+GLOBAL nkBool is_any_mouse_button_down(void)
 {
     for(nkS32 i=0; i<NK_CAST(nkS32, MouseButton_TOTAL); ++i)
         if(is_mouse_button_down(NK_CAST(MouseButton, i))) return NK_TRUE;
     return NK_FALSE;
 }
 
-static nkBool is_any_mouse_button_up(void)
+GLOBAL nkBool is_any_mouse_button_up(void)
 {
     for(nkS32 i=0; i<NK_CAST(nkS32, MouseButton_TOTAL); ++i)
         if(is_mouse_button_up(NK_CAST(MouseButton, i))) return NK_TRUE;
     return NK_FALSE;
 }
 
-static nkBool is_any_mouse_button_pressed(void)
+GLOBAL nkBool is_any_mouse_button_pressed(void)
 {
     for(nkS32 i=0; i<NK_CAST(nkS32, MouseButton_TOTAL); ++i)
         if(is_mouse_button_pressed(NK_CAST(MouseButton, i))) return NK_TRUE;
     return NK_FALSE;
 }
 
-static nkBool is_any_mouse_button_released(void)
+GLOBAL nkBool is_any_mouse_button_released(void)
 {
     for(nkS32 i=0; i<NK_CAST(nkS32, MouseButton_TOTAL); ++i)
         if(is_mouse_button_released(NK_CAST(MouseButton, i))) return NK_TRUE;
     return NK_FALSE;
 }
 
-static void set_mouse_to_relative(nkBool enable)
+GLOBAL void set_mouse_to_relative(nkBool enable)
 {
     SDL_SetRelativeMouseMode(NK_CAST(SDL_bool,enable));
 }
 
-static nkBool is_mouse_relative(void)
+GLOBAL nkBool is_mouse_relative(void)
 {
     return NK_CAST(nkBool, SDL_GetRelativeMouseMode());
 }
 
-static nkVec2 get_window_mouse_pos(void)
+GLOBAL nkVec2 get_window_mouse_pos(void)
 {
     return g_input.mouse_pos;
 }
 
-static nkVec2 get_relative_mouse_pos(void)
+GLOBAL nkVec2 get_relative_mouse_pos(void)
 {
     return g_input.mouse_pos_relative;
 }
@@ -342,21 +342,21 @@ static nkVec2 get_relative_mouse_pos(void)
 // Gamepad
 //
 
-static nkBool is_gamepad_button_down(GamepadButton button)
+GLOBAL nkBool is_gamepad_button_down(GamepadButton button)
 {
     if(button == GamepadButton_Invalid) return NK_FALSE;
     if(!g_input.gamepad) return NK_FALSE;
     return (g_input.curr_pad_state[button] != 0);
 }
 
-static nkBool is_gamepad_button_up(GamepadButton button)
+GLOBAL nkBool is_gamepad_button_up(GamepadButton button)
 {
     if(button == GamepadButton_Invalid) return NK_FALSE;
     if(!g_input.gamepad) return NK_FALSE;
     return (g_input.curr_pad_state[button] == 0);
 }
 
-static nkBool is_gamepad_button_pressed(GamepadButton button)
+GLOBAL nkBool is_gamepad_button_pressed(GamepadButton button)
 {
     if(button == GamepadButton_Invalid) return NK_FALSE;
     if(!g_input.gamepad) return NK_FALSE;
@@ -364,7 +364,7 @@ static nkBool is_gamepad_button_pressed(GamepadButton button)
             g_input.prev_pad_state[button] == 0);
 }
 
-static nkBool is_gamepad_button_released(GamepadButton button)
+GLOBAL nkBool is_gamepad_button_released(GamepadButton button)
 {
     if(button == GamepadButton_Invalid) return NK_FALSE;
     if(!g_input.gamepad) return NK_FALSE;
@@ -372,7 +372,7 @@ static nkBool is_gamepad_button_released(GamepadButton button)
             g_input.prev_pad_state[button] != 0);
 }
 
-static nkBool is_any_gamepad_button_down(void)
+GLOBAL nkBool is_any_gamepad_button_down(void)
 {
     if(g_input.gamepad)
         for(nkS32 i=0; i<GamepadButton_TOTAL; ++i)
@@ -380,7 +380,7 @@ static nkBool is_any_gamepad_button_down(void)
     return NK_FALSE;
 }
 
-static nkBool is_any_gamepad_button_up(void)
+GLOBAL nkBool is_any_gamepad_button_up(void)
 {
     if(g_input.gamepad)
         for(nkS32 i=0; i<GamepadButton_TOTAL; ++i)
@@ -388,7 +388,7 @@ static nkBool is_any_gamepad_button_up(void)
     return NK_FALSE;
 }
 
-static nkBool is_any_gamepad_button_pressed(void)
+GLOBAL nkBool is_any_gamepad_button_pressed(void)
 {
     if(g_input.gamepad)
         for(nkS32 i=0; i<GamepadButton_TOTAL; ++i)
@@ -396,7 +396,7 @@ static nkBool is_any_gamepad_button_pressed(void)
     return NK_FALSE;
 }
 
-static nkBool is_any_gamepad_button_released(void)
+GLOBAL nkBool is_any_gamepad_button_released(void)
 {
     if(g_input.gamepad)
         for(nkS32 i=0; i<GamepadButton_TOTAL; ++i)
@@ -404,103 +404,103 @@ static nkBool is_any_gamepad_button_released(void)
     return NK_FALSE;
 }
 
-static nkS16 get_gamepad_axis(GamepadAxis axis)
+GLOBAL nkS16 get_gamepad_axis(GamepadAxis axis)
 {
     if(axis == GamepadAxis_Invalid) return 0;
     if(!g_input.gamepad) return 0;
     return g_input.curr_axis_state[axis];
 }
 
-static nkBool is_gamepad_rstick_up(void)
+GLOBAL nkBool is_gamepad_rstick_up(void)
 {
     return (get_gamepad_axis(GamepadAxis_RightStickY) < -INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_rstick_right(void)
+GLOBAL nkBool is_gamepad_rstick_right(void)
 {
     return (get_gamepad_axis(GamepadAxis_RightStickX) > INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_rstick_down(void)
+GLOBAL nkBool is_gamepad_rstick_down(void)
 {
     return (get_gamepad_axis(GamepadAxis_RightStickY) > INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_rstick_left(void)
+GLOBAL nkBool is_gamepad_rstick_left(void)
 {
     return (get_gamepad_axis(GamepadAxis_RightStickX) < -INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_rstick_pressed_up(void)
+GLOBAL nkBool is_gamepad_rstick_pressed_up(void)
 {
     if(!g_input.gamepad) return NK_FALSE;
     return (g_input.prev_axis_state[GamepadAxis_RightStickY] >= -INPUT_GAMEPAD_STICK_DEADZONE &&
             g_input.curr_axis_state[GamepadAxis_RightStickY] <  -INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_rstick_pressed_right(void)
+GLOBAL nkBool is_gamepad_rstick_pressed_right(void)
 {
     if(!g_input.gamepad) return NK_FALSE;
     return (g_input.prev_axis_state[GamepadAxis_RightStickX] <= INPUT_GAMEPAD_STICK_DEADZONE &&
             g_input.curr_axis_state[GamepadAxis_RightStickX] >  INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_rstick_pressed_down(void)
+GLOBAL nkBool is_gamepad_rstick_pressed_down(void)
 {
     if(!g_input.gamepad) return NK_FALSE;
     return (g_input.prev_axis_state[GamepadAxis_RightStickY] <= INPUT_GAMEPAD_STICK_DEADZONE &&
             g_input.curr_axis_state[GamepadAxis_RightStickY] >  INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_rstick_pressed_left(void)
+GLOBAL nkBool is_gamepad_rstick_pressed_left(void)
 {
     if(!g_input.gamepad) return false;
     return (g_input.prev_axis_state[GamepadAxis_RightStickX] >= -INPUT_GAMEPAD_STICK_DEADZONE &&
             g_input.curr_axis_state[GamepadAxis_RightStickX] <  -INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_lstick_up(void)
+GLOBAL nkBool is_gamepad_lstick_up(void)
 {
     return (get_gamepad_axis(GamepadAxis_LeftStickY) < -INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_lstick_right(void)
+GLOBAL nkBool is_gamepad_lstick_right(void)
 {
     return (get_gamepad_axis(GamepadAxis_LeftStickX) > INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_lstick_down(void)
+GLOBAL nkBool is_gamepad_lstick_down(void)
 {
     return (get_gamepad_axis(GamepadAxis_LeftStickY) > INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_lstick_left(void)
+GLOBAL nkBool is_gamepad_lstick_left(void)
 {
     return (get_gamepad_axis(GamepadAxis_LeftStickX) < -INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_lstick_pressed_up(void)
+GLOBAL nkBool is_gamepad_lstick_pressed_up(void)
 {
     if(!g_input.gamepad) return NK_FALSE;
     return (g_input.prev_axis_state[GamepadAxis_LeftStickY] >= -INPUT_GAMEPAD_STICK_DEADZONE &&
             g_input.curr_axis_state[GamepadAxis_LeftStickY] <  -INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_lstick_pressed_right(void)
+GLOBAL nkBool is_gamepad_lstick_pressed_right(void)
 {
     if(!g_input.gamepad) return NK_FALSE;
     return (g_input.prev_axis_state[GamepadAxis_LeftStickX] <= INPUT_GAMEPAD_STICK_DEADZONE &&
             g_input.curr_axis_state[GamepadAxis_LeftStickX] >  INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_lstick_pressed_down(void)
+GLOBAL nkBool is_gamepad_lstick_pressed_down(void)
 {
     if(!g_input.gamepad) return NK_FALSE;
     return (g_input.prev_axis_state[GamepadAxis_LeftStickY] <= INPUT_GAMEPAD_STICK_DEADZONE &&
             g_input.curr_axis_state[GamepadAxis_LeftStickY] >  INPUT_GAMEPAD_STICK_DEADZONE);
 }
 
-static nkBool is_gamepad_lstick_pressed_left(void)
+GLOBAL nkBool is_gamepad_lstick_pressed_left(void)
 {
     if(!g_input.gamepad) return false;
     return (g_input.prev_axis_state[GamepadAxis_LeftStickX] >= -INPUT_GAMEPAD_STICK_DEADZONE &&

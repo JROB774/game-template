@@ -66,32 +66,32 @@
 #include "imm_draw.cpp"
 #include "assets.cpp"
 
-static Texture g_welcome_texture;
-static nkF32   g_welcome_angle;
+INTERNAL Texture g_welcome_texture;
+INTERNAL nkF32   g_welcome_angle;
 
-static void app_main(AppDesc* desc)
+GLOBAL void app_main(AppDesc* desc)
 {
     // Does nothing, we are using the defaults...
 }
 
-static void app_init(void)
+GLOBAL void app_init(void)
 {
     g_welcome_texture = load_asset_texture("welcome.png", SamplerFilter_Nearest, SamplerWrap_Clamp);
 }
 
-static void app_quit(void)
+GLOBAL void app_quit(void)
 {
     texture_destroy(g_welcome_texture);
 }
 
-static void app_tick(nkF32 dt)
+GLOBAL void app_tick(nkF32 dt)
 {
-    static nkF32 timer = 0.0f;
+    PERSISTENT nkF32 timer = 0.0f;
     timer += dt;
     g_welcome_angle = nk_sin_range(-0.25f, 0.25f, timer * 3.0f);
 }
 
-static void app_draw(void)
+GLOBAL void app_draw(void)
 {
     nkF32 ww = NK_CAST(nkF32, get_window_width());
     nkF32 wh = NK_CAST(nkF32, get_window_height());

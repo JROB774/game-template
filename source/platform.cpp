@@ -1,8 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-static constexpr nkU32 WINDOW_FLAGS = SDL_WINDOW_HIDDEN|SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL;
+INTERNAL constexpr nkU32 WINDOW_FLAGS = SDL_WINDOW_HIDDEN|SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL;
 
-static constexpr const nkChar* PROGRAM_STATE_FILE = "state.dat";
+INTERNAL constexpr const nkChar* PROGRAM_STATE_FILE = "state.dat";
 
 #pragma pack(push,1)
 struct ProgramState
@@ -34,9 +34,9 @@ struct PlatformContext
     nkBool        fullscreen;
 };
 
-static PlatformContext g_ctx;
+INTERNAL PlatformContext g_ctx;
 
-static void cache_window_bounds(void)
+INTERNAL void cache_window_bounds(void)
 {
     if(g_ctx.maximized) SDL_RestoreWindow(g_ctx.window);
     SDL_GetWindowPosition(g_ctx.window, &g_ctx.window_x, &g_ctx.window_y);
@@ -44,7 +44,7 @@ static void cache_window_bounds(void)
     if(g_ctx.maximized) SDL_MaximizeWindow(g_ctx.window);
 }
 
-static void load_program_state(void)
+INTERNAL void load_program_state(void)
 {
     nkChar file_name[1024] = NK_ZERO_MEM;
 
@@ -102,7 +102,7 @@ static void load_program_state(void)
     set_fullscreen(program_state.fullscreen);
 }
 
-static void save_program_state(void)
+INTERNAL void save_program_state(void)
 {
     // Set the program state values.
     ProgramState program_state = NK_ZERO_MEM;
@@ -152,7 +152,7 @@ static void save_program_state(void)
     }
 }
 
-static void main_init(void)
+INTERNAL void main_init(void)
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -204,7 +204,7 @@ static void main_init(void)
     g_ctx.running = NK_TRUE;
 }
 
-static void main_quit(void)
+INTERNAL void main_quit(void)
 {
     save_program_state();
 
@@ -225,13 +225,13 @@ static void main_quit(void)
     SDL_Quit();
 }
 
-static void main_loop(void)
+INTERNAL void main_loop(void)
 {
-    static nkU64 perf_frequency  = 0;
-    static nkU64 last_counter    = 0;
-    static nkU64 end_counter     = 0;
-    static nkU64 elapsed_counter = 0;
-    static nkF32 update_timer    = 0.0f;
+    PERSISTENT nkU64 perf_frequency  = 0;
+    PERSISTENT nkU64 last_counter    = 0;
+    PERSISTENT nkU64 end_counter     = 0;
+    PERSISTENT nkU64 elapsed_counter = 0;
+    PERSISTENT nkF32 update_timer    = 0.0f;
 
     nkF32 dt = 1.0f / g_ctx.app_desc.tick_rate; // We use a fixed update rate to keep things deterministic.
 
@@ -353,27 +353,27 @@ int main(int argc, char** argv)
 
 /*////////////////////////////////////////////////////////////////////////////*/
 
-static nkChar* get_base_path(void)
+GLOBAL nkChar* get_base_path(void)
 {
     return g_ctx.base_path;
 }
 
-static void* get_window(void)
+GLOBAL void* get_window(void)
 {
     return g_ctx.window;
 }
 
-static void* get_context(void)
+GLOBAL void* get_context(void)
 {
     return g_ctx.glcontext;
 }
 
-static void terminate_app(void)
+GLOBAL void terminate_app(void)
 {
     g_ctx.running = NK_FALSE;
 }
 
-static void fatal_error(const nkChar* fmt, ...)
+GLOBAL void fatal_error(const nkChar* fmt, ...)
 {
     nkChar message_buffer[1024] = NK_ZERO_MEM;
 
@@ -392,7 +392,7 @@ static void fatal_error(const nkChar* fmt, ...)
     abort();
 }
 
-static void user_error(const nkChar* fmt, ...)
+GLOBAL void user_error(const nkChar* fmt, ...)
 {
     nkChar message_buffer[1024] = NK_ZERO_MEM;
 
@@ -409,7 +409,7 @@ static void user_error(const nkChar* fmt, ...)
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message_buffer, g_ctx.window);
 }
 
-static iPoint get_window_size(void)
+GLOBAL iPoint get_window_size(void)
 {
     nkS32 width,height;
     SDL_GetWindowSize(g_ctx.window, &width,&height);
@@ -419,17 +419,17 @@ static iPoint get_window_size(void)
     return size;
 }
 
-static nkS32 get_window_width(void)
+GLOBAL nkS32 get_window_width(void)
 {
     return NK_CAST(nkS32, get_window_size().x);
 }
 
-static nkS32 get_window_height(void)
+GLOBAL nkS32 get_window_height(void)
 {
     return NK_CAST(nkS32, get_window_size().y);
 }
 
-static void set_fullscreen(nkBool enable)
+GLOBAL void set_fullscreen(nkBool enable)
 {
     if(g_ctx.fullscreen == enable) return;
     if(enable) cache_window_bounds();
@@ -437,22 +437,22 @@ static void set_fullscreen(nkBool enable)
     g_ctx.fullscreen = enable;
 }
 
-static nkBool is_fullscreen(void)
+GLOBAL nkBool is_fullscreen(void)
 {
     return g_ctx.fullscreen;
 }
 
-static void show_cursor(nkBool show)
+GLOBAL void show_cursor(nkBool show)
 {
     SDL_ShowCursor((show ? SDL_ENABLE : SDL_DISABLE));
 }
 
-static nkBool is_cursor_visible()
+GLOBAL nkBool is_cursor_visible()
 {
     return (SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE);
 }
 
-static nkU64 get_system_time_ms()
+GLOBAL nkU64 get_system_time_ms()
 {
     nkF64 freq = NK_CAST(nkF64, SDL_GetPerformanceFrequency());
     nkF64 tick = NK_CAST(nkF64, SDL_GetPerformanceCounter());
@@ -462,7 +462,7 @@ static nkU64 get_system_time_ms()
     return NK_CAST(nkU64, ms);
 }
 
-static nkU64 get_system_time_us()
+GLOBAL nkU64 get_system_time_us()
 {
     nkF64 freq = NK_CAST(nkF64, SDL_GetPerformanceFrequency());
     nkF64 tick = NK_CAST(nkF64, SDL_GetPerformanceCounter());

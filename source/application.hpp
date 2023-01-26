@@ -9,10 +9,10 @@ struct AppDesc
     nkF32         tick_rate   = 60.0f;           // How many times to run the tick callback each second.
 };
 
-static void app_main(AppDesc* desc);
-static void app_init(void);
-static void app_quit(void);
-static void app_tick(nkF32 dt);
-static void app_draw(void);
+GLOBAL void app_main(AppDesc* desc);
+GLOBAL void app_init(void);
+GLOBAL void app_quit(void);
+GLOBAL void app_tick(nkF32 dt);
+GLOBAL void app_draw(void);
 
 /*////////////////////////////////////////////////////////////////////////////*/

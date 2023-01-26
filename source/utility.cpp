@@ -5,7 +5,7 @@
 //
 
 template<typename T, nkU32 N>
-static NKFORCEINLINE void stack_push(Stack<T,N>* stack, T value)
+GLOBAL NKFORCEINLINE void stack_push(Stack<T,N>* stack, T value)
 {
     NK_ASSERT(stack);
     NK_ASSERT(stack->size < N);
@@ -13,7 +13,7 @@ static NKFORCEINLINE void stack_push(Stack<T,N>* stack, T value)
 }
 
 template<typename T, nkU32 N>
-static NKFORCEINLINE T stack_pop(Stack<T,N>* stack)
+GLOBAL NKFORCEINLINE T stack_pop(Stack<T,N>* stack)
 {
     NK_ASSERT(stack);
     NK_ASSERT(stack->size > 0);
@@ -21,7 +21,7 @@ static NKFORCEINLINE T stack_pop(Stack<T,N>* stack)
 }
 
 template<typename T, nkU32 N>
-static NKFORCEINLINE T stack_peek(Stack<T,N>* stack)
+GLOBAL NKFORCEINLINE T stack_peek(Stack<T,N>* stack)
 {
     NK_ASSERT(stack);
     NK_ASSERT(stack->size > 0);
@@ -29,21 +29,21 @@ static NKFORCEINLINE T stack_peek(Stack<T,N>* stack)
 }
 
 template<typename T, nkU32 N>
-static NKFORCEINLINE nkU32 stack_size(Stack<T,N>* stack)
+GLOBAL NKFORCEINLINE nkU32 stack_size(Stack<T,N>* stack)
 {
     NK_ASSERT(stack);
     return stack->size;
 }
 
 template<typename T, nkU32 N>
-static NKFORCEINLINE nkBool stack_empty(Stack<T,N>* stack)
+GLOBAL NKFORCEINLINE nkBool stack_empty(Stack<T,N>* stack)
 {
     NK_ASSERT(stack);
     return (stack->size == 0);
 }
 
 template<typename T, nkU32 N>
-static NKFORCEINLINE void stack_clear(Stack<T,N>* stack)
+GLOBAL NKFORCEINLINE void stack_clear(Stack<T,N>* stack)
 {
     NK_ASSERT(stack);
     stack->size = 0;
@@ -53,7 +53,7 @@ static NKFORCEINLINE void stack_clear(Stack<T,N>* stack)
 // String helpers.
 //
 
-static wchar_t* convert_string_to_wide(const nkChar* str)
+GLOBAL wchar_t* convert_string_to_wide(const nkChar* str)
 {
     nkU64 length = strlen(str);
     wchar_t* wstr = NK_MALLOC_TYPES(wchar_t, (length*2)+1);
@@ -63,7 +63,7 @@ static wchar_t* convert_string_to_wide(const nkChar* str)
     return wstr;
 }
 
-static nkString format_string(const nkChar* fmt, ...)
+GLOBAL nkString format_string(const nkChar* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -72,7 +72,7 @@ static nkString format_string(const nkChar* fmt, ...)
     return str;
 }
 
-static nkString format_string_v(const nkChar* fmt, va_list args)
+GLOBAL nkString format_string_v(const nkChar* fmt, va_list args)
 {
     nkS32 length = vsnprintf(NULL, 0, fmt, args);
     nkString str;
@@ -86,7 +86,7 @@ static nkString format_string_v(const nkChar* fmt, va_list args)
 // Collision.
 //
 
-static NKFORCEINLINE nkBool point_vs_rect(nkF32 px, nkF32 py, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh)
+GLOBAL NKFORCEINLINE nkBool point_vs_rect(nkF32 px, nkF32 py, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh)
 {
     return ((px >= rx) && (px < (rx+rw)) && (py >= ry) && (py < (ry+rh)));
 }
@@ -95,22 +95,22 @@ static NKFORCEINLINE nkBool point_vs_rect(nkF32 px, nkF32 py, nkF32 rx, nkF32 ry
 // Random number generation.
 //
 
-static void rng_seed(nkU32 seed)
+GLOBAL void rng_seed(nkU32 seed)
 {
     srand(seed);
 }
 
-static nkS32 rng_s32(void)
+GLOBAL nkS32 rng_s32(void)
 {
     return rand();
 }
 
-static nkF32 rng_f32(void)
+GLOBAL nkF32 rng_f32(void)
 {
     return (NK_CAST(nkF32,rng_s32()) / NK_CAST(nkF32,RAND_MAX));
 }
 
-static nkVec2 rng_v2(void)
+GLOBAL nkVec2 rng_v2(void)
 {
     nkVec2 v;
     v.x = rng_f32();
@@ -118,7 +118,7 @@ static nkVec2 rng_v2(void)
     return v;
 }
 
-static nkVec3 rng_v3(void)
+GLOBAL nkVec3 rng_v3(void)
 {
     nkVec3 v;
     v.x = rng_f32();
@@ -127,7 +127,7 @@ static nkVec3 rng_v3(void)
     return v;
 }
 
-static nkVec4 rng_v4(void)
+GLOBAL nkVec4 rng_v4(void)
 {
     nkVec4 v;
     v.x = rng_f32();
@@ -137,18 +137,18 @@ static nkVec4 rng_v4(void)
     return v;
 }
 
-static nkS32 rng_s32(nkS32 min, nkS32 max)
+GLOBAL nkS32 rng_s32(nkS32 min, nkS32 max)
 {
     if(min > max) NK_SWAP(nkS32,min,max);
     return ((rng_s32() % ((max+1)-min)) + min);
 }
 
-static nkF32 rng_f32(nkF32 min, nkF32 max)
+GLOBAL nkF32 rng_f32(nkF32 min, nkF32 max)
 {
     return (min + NK_CAST(nkF32,rng_s32()) / (NK_CAST(nkF32,RAND_MAX) / (max-min)));
 }
 
-static nkVec2 rng_v2(nkVec2 min, nkVec2 max)
+GLOBAL nkVec2 rng_v2(nkVec2 min, nkVec2 max)
 {
     nkVec2 v;
     v.x = rng_f32(min.x,max.x);
@@ -156,7 +156,7 @@ static nkVec2 rng_v2(nkVec2 min, nkVec2 max)
     return v;
 }
 
-static nkVec3 rng_v3(nkVec3 min, nkVec3 max)
+GLOBAL nkVec3 rng_v3(nkVec3 min, nkVec3 max)
 {
     nkVec3 v;
     v.x = rng_f32(min.x,max.x);
@@ -165,7 +165,7 @@ static nkVec3 rng_v3(nkVec3 min, nkVec3 max)
     return v;
 }
 
-static nkVec4 rng_v4(nkVec4 min, nkVec4 max)
+GLOBAL nkVec4 rng_v4(nkVec4 min, nkVec4 max)
 {
     nkVec4 v;
     v.x = rng_f32(min.x,max.x);
@@ -179,7 +179,7 @@ static nkVec4 rng_v4(nkVec4 min, nkVec4 max)
 // String parsing helpers.
 //
 
-static nkChar* str_eat_space(nkChar** str)
+GLOBAL nkChar* str_eat_space(nkChar** str)
 {
     NK_ASSERT(str);
     while(isspace(**str))
@@ -187,7 +187,7 @@ static nkChar* str_eat_space(nkChar** str)
     return (*str);
 }
 
-static nkChar* str_get_line(nkChar** str)
+GLOBAL nkChar* str_get_line(nkChar** str)
 {
     NK_ASSERT(str);
     PERSISTENT nkChar linebuf[1024]; // @Improve: Dynamically grow as needed...
@@ -206,7 +206,7 @@ static nkChar* str_get_line(nkChar** str)
     return linebuf;
 }
 
-static nkChar* str_get_word(nkChar** str)
+GLOBAL nkChar* str_get_word(nkChar** str)
 {
     NK_ASSERT(str);
     PERSISTENT nkChar wordbuf[1024]; // @Improve: Dynamically grow as needed...
@@ -223,7 +223,7 @@ static nkChar* str_get_word(nkChar** str)
     return wordbuf;
 }
 
-static nkBool str_get_bool(nkChar** str)
+GLOBAL nkBool str_get_bool(nkChar** str)
 {
     NK_ASSERT(str);
     nkChar* s = str_get_word(str);
@@ -233,21 +233,21 @@ static nkBool str_get_bool(nkChar** str)
     return NK_FALSE;
 }
 
-static nkS32 str_get_s32(nkChar** str, nkS32 base)
+GLOBAL nkS32 str_get_s32(nkChar** str, nkS32 base)
 {
     NK_ASSERT(str);
     nkChar* s = str_get_word(str);
     return strtol(s, NULL, base);
 }
 
-static nkF32 str_get_f32(nkChar** str)
+GLOBAL nkF32 str_get_f32(nkChar** str)
 {
     NK_ASSERT(str);
     nkChar* s = str_get_word(str);
     return NK_CAST(nkF32, atof(s));
 }
 
-static nkVec2 str_get_vec2(nkChar** str)
+GLOBAL nkVec2 str_get_vec2(nkChar** str)
 {
     NK_ASSERT(str);
     nkVec2 v = NK_ZERO_MEM;
@@ -256,7 +256,7 @@ static nkVec2 str_get_vec2(nkChar** str)
     return v;
 }
 
-static nkVec3 str_get_vec3(nkChar** str)
+GLOBAL nkVec3 str_get_vec3(nkChar** str)
 {
     NK_ASSERT(str);
     nkVec3 v = NK_ZERO_MEM;
@@ -266,7 +266,7 @@ static nkVec3 str_get_vec3(nkChar** str)
     return v;
 }
 
-static nkVec4 str_get_vec4(nkChar** str)
+GLOBAL nkVec4 str_get_vec4(nkChar** str)
 {
     NK_ASSERT(str);
     nkVec4 v = NK_ZERO_MEM;

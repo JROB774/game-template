@@ -17,9 +17,9 @@ typedef struct ImmContext
 }
 ImmContext;
 
-static ImmContext g_imm;
+INTERNAL ImmContext g_imm;
 
-static void imm_init(void)
+GLOBAL void imm_init(void)
 {
     g_imm.shader = load_asset_shader("imm.shader");
     g_imm.buffer = vertex_buffer_create();
@@ -33,43 +33,43 @@ static void imm_init(void)
     g_imm.model      = nk_m4_identity();
 }
 
-static void imm_quit(void)
+GLOBAL void imm_quit(void)
 {
     vertex_buffer_destroy(g_imm.buffer);
     shader_destroy(g_imm.shader);
 }
 
-static nkMat4 imm_get_projection(void)
+GLOBAL nkMat4 imm_get_projection(void)
 {
     return g_imm.projection;
 }
 
-static nkMat4 imm_get_view(void)
+GLOBAL nkMat4 imm_get_view(void)
 {
     return g_imm.view;
 }
 
-static nkMat4 imm_get_model(void)
+GLOBAL nkMat4 imm_get_model(void)
 {
     return g_imm.model;
 }
 
-static void imm_set_projection(nkMat4 projection)
+GLOBAL void imm_set_projection(nkMat4 projection)
 {
     g_imm.projection = projection;
 }
 
-static void imm_set_view(nkMat4 view)
+GLOBAL void imm_set_view(nkMat4 view)
 {
     g_imm.view = view;
 }
 
-static void imm_set_model(nkMat4 model)
+GLOBAL void imm_set_model(nkMat4 model)
 {
     g_imm.model = model;
 }
 
-static void imm_begin(DrawMode draw_mode, Texture tex, Shader shader)
+GLOBAL void imm_begin(DrawMode draw_mode, Texture tex, Shader shader)
 {
     g_imm.draw_mode = draw_mode;
     g_imm.bound_texture = tex;
@@ -82,7 +82,7 @@ static void imm_begin(DrawMode draw_mode, Texture tex, Shader shader)
     }
 }
 
-static void imm_end(void)
+GLOBAL void imm_end(void)
 {
     texture_bind(g_imm.bound_texture, 0);
     shader_bind(g_imm.bound_shader);
@@ -96,20 +96,20 @@ static void imm_end(void)
     vertex_buffer_draw(g_imm.buffer, g_imm.draw_mode, g_imm.vert_count);
 }
 
-static void imm_vertex(ImmVertex v)
+GLOBAL void imm_vertex(ImmVertex v)
 {
     NK_ASSERT(g_imm.vert_count < IMM_MAX_VERTS);
     g_imm.verts[g_imm.vert_count++] = v;
 }
 
-static void imm_point(nkF32 x, nkF32 y, nkVec4 color)
+GLOBAL void imm_point(nkF32 x, nkF32 y, nkVec4 color)
 {
     imm_begin(DrawMode_Points, NULL, NULL);
     imm_vertex({ { x,y }, { 0,0 }, color });
     imm_end();
 }
 
-static void imm_Line(nkF32 x1, nkF32 y1, nkF32 x2, nkF32 y2, nkVec4 color)
+GLOBAL void imm_Line(nkF32 x1, nkF32 y1, nkF32 x2, nkF32 y2, nkVec4 color)
 {
     imm_begin(DrawMode_Lines, NULL, NULL);
     imm_vertex({ { x1,y1 }, { 0,0 }, color });
@@ -117,7 +117,7 @@ static void imm_Line(nkF32 x1, nkF32 y1, nkF32 x2, nkF32 y2, nkVec4 color)
     imm_end();
 }
 
-static void imm_rect_outline(nkF32 x, nkF32 y, nkF32 w, nkF32 h, nkVec4 color)
+GLOBAL void imm_rect_outline(nkF32 x, nkF32 y, nkF32 w, nkF32 h, nkVec4 color)
 {
     x += 0.5f;
     y += 0.5f;
@@ -135,7 +135,7 @@ static void imm_rect_outline(nkF32 x, nkF32 y, nkF32 w, nkF32 h, nkVec4 color)
     imm_end();
 }
 
-static void imm_rect_filled(nkF32 x, nkF32 y, nkF32 w, nkF32 h, nkVec4 color)
+GLOBAL void imm_rect_filled(nkF32 x, nkF32 y, nkF32 w, nkF32 h, nkVec4 color)
 {
     nkF32 x1 = x;
     nkF32 y1 = y;
@@ -150,7 +150,7 @@ static void imm_rect_filled(nkF32 x, nkF32 y, nkF32 w, nkF32 h, nkVec4 color)
     imm_end();
 }
 
-static void imm_circle_outline(nkF32 x, nkF32 y, nkF32 r, nkS32 n, nkVec4 color)
+GLOBAL void imm_circle_outline(nkF32 x, nkF32 y, nkF32 r, nkS32 n, nkVec4 color)
 {
     imm_begin(DrawMode_LineLoop, NULL, NULL);
     for(nkS32 i=0; i<n; ++i)
@@ -163,7 +163,7 @@ static void imm_circle_outline(nkF32 x, nkF32 y, nkF32 r, nkS32 n, nkVec4 color)
     imm_end();
 }
 
-static void imm_circle_filled(nkF32 x, nkF32 y, nkF32 r, nkS32 n, nkVec4 color)
+GLOBAL void imm_circle_filled(nkF32 x, nkF32 y, nkF32 r, nkS32 n, nkVec4 color)
 {
     imm_begin(DrawMode_TriangleFan, NULL, NULL);
     imm_vertex({ { x,y }, { 0,0 }, color });
@@ -177,17 +177,17 @@ static void imm_circle_filled(nkF32 x, nkF32 y, nkF32 r, nkS32 n, nkVec4 color)
     imm_end();
 }
 
-static void imm_begin_texture_batch(Texture tex)
+GLOBAL void imm_begin_texture_batch(Texture tex)
 {
     imm_begin(DrawMode_Triangles, tex, NULL);
 }
 
-static void imm_end_texture_batch(void)
+GLOBAL void imm_end_texture_batch(void)
 {
     imm_end();
 }
 
-static void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 color)
+GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 color)
 {
     nkF32 w = texture_get_width(tex);
     nkF32 h = texture_get_height(tex);
@@ -223,7 +223,7 @@ static void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmRect* clip, nkVe
     imm_end();
 }
 
-static void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip, nkVec4 color)
+GLOBAL void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip, nkVec4 color)
 {
     nkF32 w = texture_get_width(tex);
     nkF32 h = texture_get_height(tex);
@@ -279,7 +279,7 @@ static void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nk
     imm_set_model(cached_matrix);
 }
 
-static void imm_texture_batched(nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 color)
+GLOBAL void imm_texture_batched(nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 color)
 {
     NK_ASSERT(g_imm.bound_texture);
 
@@ -317,7 +317,7 @@ static void imm_texture_batched(nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 co
     imm_vertex({ { x1,y2 }, { s1,t2 }, color }); // BL
 }
 
-static void imm_texture_batched_ex(nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip, nkVec4 color)
+GLOBAL void imm_texture_batched_ex(nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip, nkVec4 color)
 {
     NK_ASSERT(g_imm.bound_texture);
 

@@ -1,9 +1,9 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-static nkBool g_npak_loaded;
-static nkNPAK g_npak;
+INTERNAL nkBool g_npak_loaded;
+INTERNAL nkNPAK g_npak;
 
-static void load_assets_npak(void)
+GLOBAL void load_assets_npak(void)
 {
     #if defined(BUILD_NATIVE)
     g_npak_loaded = nk_npak_load(&g_npak, "assets.npak");
@@ -12,19 +12,19 @@ static void load_assets_npak(void)
     #endif // BUILD_NATIVE
 }
 
-static void free_assets_npak(void)
+GLOBAL void free_assets_npak(void)
 {
     #if defined(BUILD_NATIVE)
     nk_npak_free(&g_npak);
     #endif // BUILD_NATIVE
 }
 
-static void load_all_assets(void)
+GLOBAL void load_all_assets(void)
 {
     // Nothing...
 }
 
-static void free_all_assets(void)
+GLOBAL void free_all_assets(void)
 {
     // Nothing...
 }
@@ -34,9 +34,9 @@ static void free_all_assets(void)
 // Assets will look in the NPAK file first (if in a native build) and then
 // fallback to looking to a file on disk if the file could not be found.
 
-static NKCONSTEXPR const nkChar* ASSET_PATH = "../../assets/";
+INTERNAL constexpr const nkChar* ASSET_PATH = "../../assets/";
 
-static Sound load_asset_sound(const nkChar* name)
+GLOBAL Sound load_asset_sound(const nkChar* name)
 {
     nkChar buffer[1024] = NK_ZERO_MEM;
 
@@ -60,7 +60,7 @@ static Sound load_asset_sound(const nkChar* name)
     return create_sound_from_file(buffer);
 }
 
-static Music load_asset_music(const nkChar* name)
+GLOBAL Music load_asset_music(const nkChar* name)
 {
     nkChar buffer[1024] = NK_ZERO_MEM;
 
@@ -84,7 +84,7 @@ static Music load_asset_music(const nkChar* name)
     return create_music_from_file(buffer);
 }
 
-static Font load_asset_font(const nkChar* name, nkF32 px_height)
+GLOBAL Font load_asset_font(const nkChar* name, nkF32 px_height)
 {
     nkChar buffer[1024] = NK_ZERO_MEM;
 
@@ -112,7 +112,7 @@ static Font load_asset_font(const nkChar* name, nkF32 px_height)
     return font;
 }
 
-static Texture load_asset_texture(const nkChar* name, SamplerFilter filter, SamplerWrap wrap)
+GLOBAL Texture load_asset_texture(const nkChar* name, SamplerFilter filter, SamplerWrap wrap)
 {
     nkChar buffer[1024] = NK_ZERO_MEM;
 
@@ -150,7 +150,7 @@ static Texture load_asset_texture(const nkChar* name, SamplerFilter filter, Samp
     return texture;
 }
 
-static Shader load_asset_shader(const nkChar* name)
+GLOBAL Shader load_asset_shader(const nkChar* name)
 {
     nkChar buffer[1024] = NK_ZERO_MEM;
 

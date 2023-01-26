@@ -1,8 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-static GLuint g_vao;
+INTERNAL GLuint g_vao;
 
-static void init_render_system(void)
+GLOBAL void init_render_system(void)
 {
     // Load OpenGL functions in a native build.
     #if defined(BUILD_NATIVE)
@@ -21,14 +21,14 @@ static void init_render_system(void)
     #endif // BUILD_NATIVE
 }
 
-static void quit_render_system(void)
+GLOBAL void quit_render_system(void)
 {
     #if defined(BUILD_NATIVE)
     glDeleteVertexArrays(1, &g_vao);
     #endif // BUILD_NATIVE
 }
 
-static void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
+GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
 {
     GLint   vx = NK_CAST(GLint,   x);
     GLint   vy = NK_CAST(GLint,   y);
@@ -38,7 +38,7 @@ static void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
     glViewport(vx,vy,vw,vh);
 }
 
-static void set_blend_mode(BlendMode blend_mode)
+GLOBAL void set_blend_mode(BlendMode blend_mode)
 {
     switch(blend_mode)
     {
@@ -61,19 +61,19 @@ static void set_blend_mode(BlendMode blend_mode)
     }
 }
 
-static void clear_screen(nkF32 r, nkF32 g, nkF32 b, nkF32 a)
+GLOBAL void clear_screen(nkF32 r, nkF32 g, nkF32 b, nkF32 a)
 {
     glClearColor(r,g,b,a);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-static void clear_screen(nkVec3 color)
+GLOBAL void clear_screen(nkVec3 color)
 {
     glClearColor(color.r,color.g,color.b,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-static void clear_screen(nkVec4 color)
+GLOBAL void clear_screen(nkVec4 color)
 {
     glClearColor(color.r,color.g,color.b,color.a);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -96,7 +96,7 @@ DEFINE_PRIVATE_TYPE(VertexBuffer)
     VertexAttrib attribs[16];
 };
 
-static VertexBuffer vertex_buffer_create(void)
+GLOBAL VertexBuffer vertex_buffer_create(void)
 {
     VertexBuffer vbuf = ALLOCATE_PRIVATE_TYPE(VertexBuffer);
     if(!vbuf)
@@ -106,21 +106,21 @@ static VertexBuffer vertex_buffer_create(void)
     return vbuf;
 }
 
-static void vertex_buffer_destroy(VertexBuffer vbuf)
+GLOBAL void vertex_buffer_destroy(VertexBuffer vbuf)
 {
     if(!vbuf) return;
     glDeleteBuffers(1, &vbuf->handle);
     NK_FREE(vbuf);
 }
 
-static void vertex_buffer_set_stride(VertexBuffer vbuf, nkU64 byte_stride)
+GLOBAL void vertex_buffer_set_stride(VertexBuffer vbuf, nkU64 byte_stride)
 {
     NK_ASSERT(vbuf);
 
     vbuf->byte_stride = byte_stride;
 }
 
-static void vertex_buffer_enable_attrib(VertexBuffer vbuf, nkU32 index, AttribType type, nkU32 comps, nkU64 byte_offset)
+GLOBAL void vertex_buffer_enable_attrib(VertexBuffer vbuf, nkU32 index, AttribType type, nkU32 comps, nkU64 byte_offset)
 {
     NK_ASSERT(vbuf);
     NK_ASSERT(index < NK_ARRAY_SIZE(vbuf->attribs));
@@ -131,7 +131,7 @@ static void vertex_buffer_enable_attrib(VertexBuffer vbuf, nkU32 index, AttribTy
     vbuf->attribs[index].byte_offset = byte_offset;
 }
 
-static void vertex_buffer_disable_attrib(VertexBuffer vbuf, nkU32 index)
+GLOBAL void vertex_buffer_disable_attrib(VertexBuffer vbuf, nkU32 index)
 {
     NK_ASSERT(vbuf);
     NK_ASSERT(index < NK_ARRAY_SIZE(vbuf->attribs));
@@ -139,7 +139,7 @@ static void vertex_buffer_disable_attrib(VertexBuffer vbuf, nkU32 index)
     vbuf->attribs[index].enabled = NK_FALSE;
 }
 
-static void vertex_buffer_update(VertexBuffer vbuf, void* data, nkU64 bytes, BufferType type)
+GLOBAL void vertex_buffer_update(VertexBuffer vbuf, void* data, nkU64 bytes, BufferType type)
 {
     NK_ASSERT(vbuf);
 
@@ -156,7 +156,7 @@ static void vertex_buffer_update(VertexBuffer vbuf, void* data, nkU64 bytes, Buf
     glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
 }
 
-static void vertex_buffer_draw(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert_count)
+GLOBAL void vertex_buffer_draw(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert_count)
 {
     NK_ASSERT(vbuf);
 
@@ -214,7 +214,7 @@ DEFINE_PRIVATE_TYPE(Shader)
     GLuint program;
 };
 
-static GLuint shader_compile(const nkChar* source, GLint bytes, GLenum type)
+INTERNAL GLuint shader_compile(const nkChar* source, GLint bytes, GLenum type)
 {
     const nkChar* sources[2] = { NULL, source };
     const GLint lengths[2] = { -1, bytes };
@@ -252,7 +252,7 @@ static GLuint shader_compile(const nkChar* source, GLint bytes, GLenum type)
     return shader;
 }
 
-static Shader shader_create(void* data, nkU64 bytes)
+GLOBAL Shader shader_create(void* data, nkU64 bytes)
 {
     Shader shader = ALLOCATE_PRIVATE_TYPE(Shader);
     if(!shader)
@@ -289,20 +289,20 @@ static Shader shader_create(void* data, nkU64 bytes)
     return shader;
 }
 
-static void shader_destroy(Shader shader)
+GLOBAL void shader_destroy(Shader shader)
 {
     if(!shader) return;
     glDeleteProgram(shader->program);
     NK_FREE(shader);
 }
 
-static void shader_bind(Shader shader)
+GLOBAL void shader_bind(Shader shader)
 {
     if(!shader) glUseProgram(GL_NONE);
     else glUseProgram(shader->program);
 }
 
-static void shader_set_bool(Shader shader, const nkChar* name, nkBool val)
+GLOBAL void shader_set_bool(Shader shader, const nkChar* name, nkBool val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -310,7 +310,7 @@ static void shader_set_bool(Shader shader, const nkChar* name, nkBool val)
     glUniform1i(location, NK_CAST(nkS32, val));
 }
 
-static void shader_set_int(Shader shader, const nkChar* name, nkS32 val)
+GLOBAL void shader_set_int(Shader shader, const nkChar* name, nkS32 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -318,7 +318,7 @@ static void shader_set_int(Shader shader, const nkChar* name, nkS32 val)
     glUniform1i(location, val);
 }
 
-static void shader_set_float(Shader shader, const nkChar* name, nkF32 val)
+GLOBAL void shader_set_float(Shader shader, const nkChar* name, nkF32 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -326,7 +326,7 @@ static void shader_set_float(Shader shader, const nkChar* name, nkF32 val)
     glUniform1f(location, val);
 }
 
-static void shader_set_vec2(Shader shader, const nkChar* name, nkVec2 val)
+GLOBAL void shader_set_vec2(Shader shader, const nkChar* name, nkVec2 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -334,7 +334,7 @@ static void shader_set_vec2(Shader shader, const nkChar* name, nkVec2 val)
     glUniform2fv(location, 1, val.raw);
 }
 
-static void shader_set_vec3(Shader shader, const nkChar* name, nkVec3 val)
+GLOBAL void shader_set_vec3(Shader shader, const nkChar* name, nkVec3 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -342,7 +342,7 @@ static void shader_set_vec3(Shader shader, const nkChar* name, nkVec3 val)
     glUniform3fv(location, 1, val.raw);
 }
 
-static void shader_set_vec4(Shader shader, const nkChar* name, nkVec4 val)
+GLOBAL void shader_set_vec4(Shader shader, const nkChar* name, nkVec4 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -350,7 +350,7 @@ static void shader_set_vec4(Shader shader, const nkChar* name, nkVec4 val)
     glUniform4fv(location, 1, val.raw);
 }
 
-static void shader_set_mat2(Shader shader, const nkChar* name, nkMat2 val)
+GLOBAL void shader_set_mat2(Shader shader, const nkChar* name, nkMat2 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -358,7 +358,7 @@ static void shader_set_mat2(Shader shader, const nkChar* name, nkMat2 val)
     glUniformMatrix2fv(location, 1, GL_FALSE, val.raw);
 }
 
-static void shader_set_mat3(Shader shader, const nkChar* name, nkMat3 val)
+GLOBAL void shader_set_mat3(Shader shader, const nkChar* name, nkMat3 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -366,7 +366,7 @@ static void shader_set_mat3(Shader shader, const nkChar* name, nkMat3 val)
     glUniformMatrix3fv(location, 1, GL_FALSE, val.raw);
 }
 
-static void shader_set_mat4(Shader shader, const nkChar* name, nkMat4 val)
+GLOBAL void shader_set_mat4(Shader shader, const nkChar* name, nkMat4 val)
 {
     NK_ASSERT(shader);
     GLint location = glGetUniformLocation(shader->program, name);
@@ -384,7 +384,7 @@ DEFINE_PRIVATE_TYPE(Texture)
     nkVec2 size;
 };
 
-static GLenum sampler_filter_to_gl(SamplerFilter filter)
+INTERNAL GLenum sampler_filter_to_gl(SamplerFilter filter)
 {
     switch(filter)
     {
@@ -403,7 +403,7 @@ static GLenum sampler_filter_to_gl(SamplerFilter filter)
     return GL_NONE;
 }
 
-static GLenum sampler_wrap_to_gl(SamplerWrap wrap)
+INTERNAL GLenum sampler_wrap_to_gl(SamplerWrap wrap)
 {
     switch(wrap)
     {
@@ -418,7 +418,7 @@ static GLenum sampler_wrap_to_gl(SamplerWrap wrap)
     return GL_NONE;
 }
 
-static GLenum bpp_to_gl_format(nkS32 bpp)
+INTERNAL GLenum bpp_to_gl_format(nkS32 bpp)
 {
     switch(bpp)
     {
@@ -443,7 +443,7 @@ static GLenum bpp_to_gl_format(nkS32 bpp)
     return GL_NONE;
 }
 
-static Texture texture_create(nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFilter filter, SamplerWrap wrap)
+GLOBAL Texture texture_create(nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFilter filter, SamplerWrap wrap)
 {
     Texture texture = ALLOCATE_PRIVATE_TYPE(Texture);
     if(!texture)
@@ -473,33 +473,33 @@ static Texture texture_create(nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFi
     return texture;
 }
 
-static void texture_destroy(Texture texture)
+GLOBAL void texture_destroy(Texture texture)
 {
     if(!texture) return;
     glDeleteTextures(1, &texture->handle);
     NK_FREE(texture);
 }
 
-static void texture_bind(Texture texture, nkS32 unit)
+GLOBAL void texture_bind(Texture texture, nkS32 unit)
 {
     glActiveTexture(GL_TEXTURE0 + unit);
     if(!texture) glBindTexture(GL_TEXTURE_2D, GL_NONE);
     else glBindTexture(GL_TEXTURE_2D, texture->handle);
 }
 
-static nkVec2 texture_get_size(Texture texture)
+GLOBAL nkVec2 texture_get_size(Texture texture)
 {
     NK_ASSERT(texture);
     return texture->size;
 }
 
-static nkF32 texture_get_width (Texture texture)
+GLOBAL nkF32 texture_get_width (Texture texture)
 {
     NK_ASSERT(texture);
     return texture->size.x;
 }
 
-static nkF32 texture_get_height(Texture texture)
+GLOBAL nkF32 texture_get_height(Texture texture)
 {
     NK_ASSERT(texture);
     return texture->size.y;
@@ -517,7 +517,7 @@ DEFINE_PRIVATE_TYPE(RenderTarget)
     SamplerWrap   wrap;
 };
 
-static RenderTarget render_target_create(nkS32 w, nkS32 h, SamplerFilter filter, SamplerWrap wrap)
+GLOBAL RenderTarget render_target_create(nkS32 w, nkS32 h, SamplerFilter filter, SamplerWrap wrap)
 {
     RenderTarget target = ALLOCATE_PRIVATE_TYPE(RenderTarget);
     if(!target)
@@ -530,7 +530,7 @@ static RenderTarget render_target_create(nkS32 w, nkS32 h, SamplerFilter filter,
     return target;
 }
 
-static void render_target_destroy(RenderTarget target)
+GLOBAL void render_target_destroy(RenderTarget target)
 {
     if(!target) return;
     glDeleteFramebuffers(1, &target->handle);
@@ -538,7 +538,7 @@ static void render_target_destroy(RenderTarget target)
     NK_FREE(target);
 }
 
-static void render_target_resize(RenderTarget target, nkS32 w, nkS32 h)
+GLOBAL void render_target_resize(RenderTarget target, nkS32 w, nkS32 h)
 {
     NK_ASSERT(target);
 
@@ -561,7 +561,7 @@ static void render_target_resize(RenderTarget target, nkS32 w, nkS32 h)
     glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
 }
 
-static void render_target_bind(RenderTarget target)
+GLOBAL void render_target_bind(RenderTarget target)
 {
     if(!target) glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
     else glBindFramebuffer(GL_FRAMEBUFFER, target->handle);

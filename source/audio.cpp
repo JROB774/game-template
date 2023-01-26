@@ -1,11 +1,11 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-static constexpr nkS32 MIXER_FREQUENCY     = MIX_DEFAULT_FREQUENCY;
-static constexpr nkU16 MIXER_SAMPLE_FORMAT = MIX_DEFAULT_FORMAT;
-static constexpr nkS32 MIXER_CHANNELS      = 2; // Stereo Sound
-static constexpr nkS32 MIXER_SAMPLE_SIZE   = 2048;
+INTERNAL constexpr nkS32 MIXER_FREQUENCY     = MIX_DEFAULT_FREQUENCY;
+INTERNAL constexpr nkU16 MIXER_SAMPLE_FORMAT = MIX_DEFAULT_FORMAT;
+INTERNAL constexpr nkS32 MIXER_CHANNELS      = 2; // Stereo Sound
+INTERNAL constexpr nkS32 MIXER_SAMPLE_SIZE   = 2048;
 
-static constexpr nkS32 MAX_AUDIO_CHANNELS = 64;
+INTERNAL constexpr nkS32 MAX_AUDIO_CHANNELS = 64;
 
 struct AudioContext
 {
@@ -13,9 +13,9 @@ struct AudioContext
     nkF32 music_volume;
 };
 
-static AudioContext g_audio;
+INTERNAL AudioContext g_audio;
 
-static void init_audio_system(void)
+GLOBAL void init_audio_system(void)
 {
     if(!NK_CHECK_FLAGS(Mix_Init(MIX_INIT_OGG), MIX_INIT_OGG))
         fatal_error("Failed to initialize SDL2 Mixer OGG support: %s", Mix_GetError());
@@ -28,7 +28,7 @@ static void init_audio_system(void)
     set_music_volume(0.7f);
 }
 
-static void quit_audio_system(void)
+GLOBAL void quit_audio_system(void)
 {
     Mix_CloseAudio();
     Mix_Quit();
@@ -36,41 +36,41 @@ static void quit_audio_system(void)
 
 // Audio =======================================================================
 
-static void set_sound_volume(nkF32 volume)
+GLOBAL void set_sound_volume(nkF32 volume)
 {
     g_audio.sound_volume = nk_clamp(volume, 0.0f, 1.0f);
     nkS32 ivolume = NK_CAST(nkS32, NK_CAST(nkF32, MIX_MAX_VOLUME) * g_audio.sound_volume);
     Mix_Volume(-1, ivolume);
 }
 
-static void set_music_volume(nkF32 volume)
+GLOBAL void set_music_volume(nkF32 volume)
 {
     g_audio.music_volume = nk_clamp(volume, 0.0f, 1.0f);
     nkS32 ivolume = NK_CAST(nkS32, NK_CAST(nkF32, MIX_MAX_VOLUME) * g_audio.music_volume);
     Mix_VolumeMusic(ivolume);
 }
 
-static nkF32 get_sound_volume(void)
+GLOBAL nkF32 get_sound_volume(void)
 {
     return g_audio.sound_volume;
 }
 
-static nkF32 get_music_volume(void)
+GLOBAL nkF32 get_music_volume(void)
 {
     return g_audio.music_volume;
 }
 
-static nkBool is_sound_on(void)
+GLOBAL nkBool is_sound_on(void)
 {
     return (g_audio.sound_volume > 0.0f);
 }
 
-static nkBool is_music_on(void)
+GLOBAL nkBool is_music_on(void)
 {
     return (g_audio.music_volume > 0.0f);
 }
 
-static nkBool is_music_playing(void)
+GLOBAL nkBool is_music_playing(void)
 {
     return NK_CAST(nkBool, Mix_PlayingMusic());
 }
@@ -84,7 +84,7 @@ DEFINE_PRIVATE_TYPE(Sound)
     Mix_Chunk* chunk;
 };
 
-static Sound create_sound_from_file(const nkChar* file_name)
+GLOBAL Sound create_sound_from_file(const nkChar* file_name)
 {
     Sound sound = ALLOCATE_PRIVATE_TYPE(Sound);
     if(!sound)
@@ -95,7 +95,7 @@ static Sound create_sound_from_file(const nkChar* file_name)
     return sound;
 }
 
-static Sound create_sound_from_data(void* data, nkU64 size)
+GLOBAL Sound create_sound_from_data(void* data, nkU64 size)
 {
     Sound sound = ALLOCATE_PRIVATE_TYPE(Sound);
     if(!sound)
@@ -109,19 +109,19 @@ static Sound create_sound_from_data(void* data, nkU64 size)
     return sound;
 }
 
-static void free_sound(Sound sound)
+GLOBAL void free_sound(Sound sound)
 {
     if(!sound) return;
     Mix_FreeChunk(sound->chunk);
     NK_FREE(sound);
 }
 
-static SoundRef play_sound(Sound sound, nkS32 loops)
+GLOBAL SoundRef play_sound(Sound sound, nkS32 loops)
 {
     return play_sound_on_channel(sound, loops, -1);
 }
 
-static SoundRef play_sound_on_channel(Sound sound, nkS32 loops, nkS32 channel)
+GLOBAL SoundRef play_sound_on_channel(Sound sound, nkS32 loops, nkS32 channel)
 {
     NK_ASSERT(channel < MAX_AUDIO_CHANNELS);
     NK_ASSERT(sound);
@@ -131,22 +131,22 @@ static SoundRef play_sound_on_channel(Sound sound, nkS32 loops, nkS32 channel)
     return NK_CAST(SoundRef,channel);
 }
 
-static void resume_sound(SoundRef sound_ref)
+GLOBAL void resume_sound(SoundRef sound_ref)
 {
     Mix_Resume(sound_ref);
 }
 
-static void pause_sound(SoundRef sound_ref)
+GLOBAL void pause_sound(SoundRef sound_ref)
 {
     Mix_Pause(sound_ref);
 }
 
-static void stop_sound(SoundRef sound_ref)
+GLOBAL void stop_sound(SoundRef sound_ref)
 {
     Mix_HaltChannel(sound_ref);
 }
 
-static void fade_out_sound(SoundRef sound_ref, nkF32 seconds)
+GLOBAL void fade_out_sound(SoundRef sound_ref, nkF32 seconds)
 {
     nkS32 ms = NK_CAST(nkS32, seconds * 1000.0f);
     Mix_FadeOutChannel(sound_ref, ms);
@@ -161,7 +161,7 @@ DEFINE_PRIVATE_TYPE(Music)
     Mix_Music* music;
 };
 
-static Music create_music_from_file(const nkChar* file_name)
+GLOBAL Music create_music_from_file(const nkChar* file_name)
 {
     Music music = ALLOCATE_PRIVATE_TYPE(Music);
     if(!music)
@@ -172,7 +172,7 @@ static Music create_music_from_file(const nkChar* file_name)
     return music;
 }
 
-static Music create_music_from_data(void* data, nkU64 size)
+GLOBAL Music create_music_from_data(void* data, nkU64 size)
 {
     Music music = ALLOCATE_PRIVATE_TYPE(Music);
     if(!music)
@@ -186,31 +186,31 @@ static Music create_music_from_data(void* data, nkU64 size)
     return music;
 }
 
-static void free_music(Music music)
+GLOBAL void free_music(Music music)
 {
     if(!music) return;
     Mix_FreeMusic(music->music);
     NK_FREE(music);
 }
 
-static void play_music(Music music, nkS32 loops)
+GLOBAL void play_music(Music music, nkS32 loops)
 {
     NK_ASSERT(music);
     if(Mix_PlayMusic(music->music, loops) == -1)
         printf("Failed to play music: %s\n", Mix_GetError());
 }
 
-static void resume_music(void)
+GLOBAL void resume_music(void)
 {
     Mix_ResumeMusic();
 }
 
-static void pause_music(void)
+GLOBAL void pause_music(void)
 {
     Mix_PauseMusic();
 }
 
-static void stop_music(void)
+GLOBAL void stop_music(void)
 {
     Mix_HaltMusic();
 }
