@@ -315,3 +315,49 @@ GLOBAL void imm_texture_batched_ex (             nkF32 x, nkF32 y, nkF32 sx, nkF
 
 /*////////////////////////////////////////////////////////////////////////////*/
 
+template<>
+Shader asset_load<Shader>(void* data, nkU64 size, nkBool from_npak, void* userdata)
+{
+    ShaderDesc sd = { data, size };
+    return create_shader(sd);
+}
+template<>
+void asset_free<Shader>(Asset<Shader>& asset)
+{
+    free_shader(asset.data);
+}
+template<>
+const nkChar* asset_path<Shader>(void)
+{
+    return "shaders/";
+}
+
+template<>
+Texture asset_load<Texture>(void* data, nkU64 size, nkBool from_npak, void* userdata)
+{
+    nkS32 w,h,bpp;
+
+    nkU8* pixels = NK_CAST(nkU8*, stbi_load_from_memory(NK_CAST(stbi_uc*, data), NK_CAST(int,size), &w,&h,&bpp, 4));
+    if(!pixels) return NULL;
+    NK_DEFER(stbi_image_free(pixels));
+
+    TextureDesc desc;
+    desc.format = TextureFormat_RGBA;
+    desc.width  = w;
+    desc.height = h;
+    desc.data   = pixels;
+
+    return create_texture(desc);
+}
+template<>
+void asset_free<Texture>(Asset<Texture>& asset)
+{
+    free_texture(asset.data);
+}
+template<>
+const nkChar* asset_path<Texture>(void)
+{
+    return "textures/";
+}
+
+/*////////////////////////////////////////////////////////////////////////////*/

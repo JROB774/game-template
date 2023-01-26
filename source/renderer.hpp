@@ -12,5 +12,8 @@ GLOBAL void do_render_frame        (void);
 #if defined(USE_RENDERER_ADVANCED)
 #include "renderer_advanced.hpp"
 #endif // USE_RENDERER_ADVANCED
+#if defined(USE_RENDERER_SIMPLE)
+#include "renderer_simple.hpp"
+#endif // USE_RENDERER_SIMPLE
 
 /*////////////////////////////////////////////////////////////////////////////*/

@@ -8,7 +8,7 @@
 #define GLEW_STATIC
 #define NK_STATIC
 
-#define USE_RENDERER_ADVANCED
+#define USE_RENDERER_SIMPLE
 
 #include <nk_define.h>
 #include <nk_math.h>
@@ -31,19 +31,19 @@
 #include "utility.hpp"
 #include "application.hpp"
 #include "platform.hpp"
+#include "asset_manager.hpp"
 #include "audio.hpp"
 #include "input.hpp"
 #include "truetype_font.hpp"
 #include "renderer.hpp"
-#include "asset_manager.hpp"
 
 #include "utility.cpp"
 #include "platform.cpp"
+#include "asset_manager.cpp"
 #include "audio.cpp"
 #include "input.cpp"
 #include "truetype_font.cpp"
 #include "renderer.cpp"
-#include "asset_manager.cpp"
 
 INTERNAL nkF32 g_welcome_angle;
 
@@ -79,10 +79,10 @@ GLOBAL void app_draw(void)
     nkF32 tx = ww * 0.5f;
     nkF32 ty = wh * 0.5f;
 
-    nkF32 scale = wh / (get_texture_height(texture) + 256.0f);
+    nkF32 scale = wh / (texture_get_height(texture) + 256.0f);
 
     imm_set_projection(nk_orthographic(0.0f,ww,wh,0.0f));
-    imm_set_viewport({ 0.0f,0.0f,ww,wh });
+    set_viewport(0.0f,0.0f,ww,wh);
 
     imm_texture_ex(texture, tx,ty, scale,scale, g_welcome_angle, NULL);
 }

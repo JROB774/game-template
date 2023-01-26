@@ -74,3 +74,26 @@ GLOBAL void            draw_truetype_text       (TrueTypeFont font, nkF32 x, nkF
 GLOBAL void            draw_truetype_char       (TrueTypeFont font, nkF32 x, nkF32 y, nkChar  chr,         nkVec4 color = NK_V4_WHITE);
 
 /*////////////////////////////////////////////////////////////////////////////*/
+
+template<>
+TrueTypeFont asset_load<TrueTypeFont>(void* data, nkU64 size, nkBool from_npak, void* userdata)
+{
+    // If no desc has been passed in then use the default font descriptor.
+    TrueTypeFontDesc desc = (userdata) ? *NK_CAST(TrueTypeFontDesc*, userdata) : TrueTypeFontDesc();
+    desc.data      = data;
+    desc.size      = size;
+    desc.owns_data = !from_npak;
+    return create_truetype_font(desc);
+}
+template<>
+void asset_free<TrueTypeFont>(Asset<TrueTypeFont>& asset)
+{
+    free_truetype_font(asset.data);
+}
+template<>
+const nkChar* asset_path<TrueTypeFont>(void)
+{
+    return "fonts_ttf/";
+}
+
+/*////////////////////////////////////////////////////////////////////////////*/

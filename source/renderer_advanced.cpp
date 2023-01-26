@@ -679,7 +679,7 @@ GLOBAL void imm_init(void)
         g_imm.uniform_buffers[i] = create_buffer(ubuffer_desc);
     }
 
-    g_imm.default_shader = asset_manager_load<Shader>("imm.shader");
+    g_imm.default_shader = asset_manager_load<Shader>("advanced_basic.shader");
 
     // Create some common samplers.
     SamplerDesc sd;
