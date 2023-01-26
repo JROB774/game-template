@@ -83,6 +83,37 @@ GLOBAL nkString format_string_v(const nkChar* fmt, va_list args)
 }
 
 //
+// File name/path helpers.
+//
+
+GLOBAL void potentially_append_slash(nkChar* file_path, nkU64 size)
+{
+    nkU64 length = strlen(file_path);
+    if(file_path[length-1] != '\\' && file_path[length-1] != '/')
+    {
+        if(length < size-1)
+        {
+            file_path[length  ] = '/';
+            file_path[length+1] = '\0'; // Just in case the memory isn't zeroed!
+        }
+    }
+}
+
+GLOBAL nkString potentially_append_slash(const nkChar* file_path)
+{
+    nkString str = nk_string_create(file_path);
+    if(!nk_string_empty(&str))
+    {
+        nkChar last_char = nk_string_last(&str);
+        if(last_char != '\\' && last_char != '/')
+        {
+            nk_string_append(&str, '/');
+        }
+    }
+    return str;
+}
+
+//
 // Collision.
 //
 

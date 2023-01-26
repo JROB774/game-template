@@ -45,6 +45,10 @@ GLOBAL wchar_t* convert_string_to_wide(const nkChar* str);
 GLOBAL nkString format_string         (const nkChar* fmt, ...);
 GLOBAL nkString format_string_v       (const nkChar* fmt, va_list args);
 
+// File name/path helpers.
+GLOBAL void     potentially_append_slash(nkChar* file_path, nkU64 size);
+GLOBAL nkString potentially_append_slash(const nkChar* file_path);
+
 // Collision.
 GLOBAL NKFORCEINLINE nkBool point_vs_rect(nkF32 px, nkF32 py, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh);
 
