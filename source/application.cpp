@@ -45,8 +45,6 @@
 #include "truetype_font.cpp"
 #include "renderer.cpp"
 
-INTERNAL nkF32 g_welcome_angle;
-
 GLOBAL void app_main(AppDesc* desc)
 {
     // Nothing...
@@ -64,27 +62,12 @@ GLOBAL void app_quit(void)
 
 GLOBAL void app_tick(nkF32 dt)
 {
-    PERSISTENT nkF32 timer = 0.0f;
-    timer += dt;
-    g_welcome_angle = nk_sin_range(-0.25f, 0.25f, timer * 3.0f);
+    // Nothing...
 }
 
 GLOBAL void app_draw(void)
 {
-    Texture texture = asset_manager_load<Texture>("welcome.png");
-
-    nkF32 ww = NK_CAST(nkF32, get_window_width());
-    nkF32 wh = NK_CAST(nkF32, get_window_height());
-
-    nkF32 tx = ww * 0.5f;
-    nkF32 ty = wh * 0.5f;
-
-    nkF32 scale = wh / (get_texture_height(texture) + 256.0f);
-
-    imm_set_projection(nk_orthographic(0.0f,ww,wh,0.0f));
-    imm_set_viewport({ 0.0f,0.0f,ww,wh });
-
-    imm_texture_ex(texture, tx,ty, scale,scale, g_welcome_angle, NULL);
+    // Nothing...
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/
