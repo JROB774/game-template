@@ -5,22 +5,69 @@
 #endif // BUILD_NATIVE
 
 #if defined(BUILD_WEB)
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #endif // BUILD_WEB
 
-INTERNAL GLuint g_vao;
+INTERNAL constexpr GLenum BUFFER_TYPE_TO_GL[] = { GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, GL_UNIFORM_BUFFER };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(BUFFER_TYPE_TO_GL) == BufferType_TOTAL, buffer_type_size_mismatch);
+
+INTERNAL constexpr GLenum BUFFER_USAGE_TO_GL[] = { GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(BUFFER_USAGE_TO_GL) == BufferUsage_TOTAL, buffer_usage_size_mismatch);
+
+INTERNAL constexpr GLenum SAMPLER_FILTER_TO_GL[] = { GL_NEAREST, GL_LINEAR };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(SAMPLER_FILTER_TO_GL) == SamplerFilter_TOTAL, sampler_filter_size_mismatch);
+
+INTERNAL constexpr GLenum SAMPLER_WRAP_TO_GL[] = { GL_REPEAT, GL_CLAMP_TO_EDGE };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(SAMPLER_WRAP_TO_GL) == SamplerWrap_TOTAL, sampler_wrap_size_mismatch);
+
+INTERNAL constexpr GLenum TEXTURE_TYPE_TO_GL[] = { GL_TEXTURE_2D };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(TEXTURE_TYPE_TO_GL) == TextureType_TOTAL, texture_type_size_mistmatch);
+
+INTERNAL constexpr GLenum DRAW_MODE_TO_GL[] = { GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(DRAW_MODE_TO_GL) == DrawMode_TOTAL, draw_mode_size_mismatch);
+
+INTERNAL constexpr GLenum DEPTH_OP_TO_GL[] = { GL_NEVER, GL_EQUAL, GL_NOTEQUAL, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL, GL_ALWAYS };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(DEPTH_OP_TO_GL) == DepthOp_TOTAL, depth_op_size_mismatch);
+
+INTERNAL constexpr GLenum ELEMENT_TYPE_TO_GL[] = { GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(ELEMENT_TYPE_TO_GL) == ElementType_TOTAL, element_type_size_mismatch);
+
+INTERNAL constexpr GLenum ATTRIB_TYPE_TO_GL[] = { GL_BYTE, GL_UNSIGNED_BYTE, GL_INT, GL_UNSIGNED_INT, GL_FLOAT };
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(ATTRIB_TYPE_TO_GL) == AttribType_TOTAL, attrib_type_size_mismatch);
+
+struct OpenGLTextureFormat
+{
+    GLenum internal_format;
+    GLenum format;
+    GLenum type;
+};
+
+INTERNAL constexpr OpenGLTextureFormat TEXTURE_FORMAT_TO_GL[] =
+{
+    { GL_R8, GL_RED, GL_UNSIGNED_BYTE },
+    { GL_RGB, GL_RGB, GL_UNSIGNED_BYTE },
+    { GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE },
+    { GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8 }
+};
+
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(TEXTURE_FORMAT_TO_GL) == TextureFormat_TOTAL, texture_format_size_mismatch);
+
+INTERNAL nkBool   g_pass_started;
+INTERNAL DrawMode g_current_draw_mode;
+INTERNAL GLuint   g_vao;
 
 GLOBAL void init_render_system(void)
 {
-    // Load OpenGL functions in a native build.
+    printf("[OpenGL]: Initializing System\n");
+
     #if defined(BUILD_NATIVE)
     glewInit();
     #endif // BUILD_NATIVE
 
-    printf("GPU Renderer   : %s\n", glGetString(GL_RENDERER));
-    printf("GPU Vendor     : %s\n", glGetString(GL_VENDOR));
-    printf("OpenGL Version : %s\n", glGetString(GL_VERSION));
-    printf("GLSL Version   : %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    printf("[OpenGL]: GPU Renderer   : %s\n", glGetString(GL_RENDERER));
+    printf("[OpenGL]: GPU Vendor     : %s\n", glGetString(GL_VENDOR));
+    printf("[OpenGL]: OpenGL Version : %s\n", glGetString(GL_VERSION));
+    printf("[OpenGL]: GLSL Version   : %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     // We need one Vertex Attribute Object in order to render with modern OpenGL.
     #if defined(BUILD_NATIVE)
@@ -36,181 +83,46 @@ GLOBAL void quit_render_system(void)
     #endif // BUILD_NATIVE
 }
 
-GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
+// Buffer ======================================================================
+
+DEFINE_PRIVATE_TYPE(Buffer)
 {
-    GLint   vx = NK_CAST(GLint,   x);
-    GLint   vy = NK_CAST(GLint,   y);
-    GLsizei vw = NK_CAST(GLsizei, w);
-    GLsizei vh = NK_CAST(GLsizei, h);
-
-    glViewport(vx,vy,vw,vh);
-}
-
-GLOBAL void set_blend_mode(BlendMode blend_mode)
-{
-    switch(blend_mode)
-    {
-        case BlendMode_None:
-        {
-            glDisable(GL_BLEND);
-        } break;
-        case BlendMode_Alpha:
-        {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendEquation(GL_FUNC_ADD);
-            glEnable(GL_BLEND);
-        } break;
-        case BlendMode_PremultipliedAlpha:
-        {
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendEquation(GL_FUNC_ADD);
-            glEnable(GL_BLEND);
-        } break;
-    }
-}
-
-GLOBAL void clear_screen(nkF32 r, nkF32 g, nkF32 b, nkF32 a)
-{
-    glClearColor(r,g,b,a);
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-GLOBAL void clear_screen(nkVec3 color)
-{
-    glClearColor(color.r,color.g,color.b,1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-GLOBAL void clear_screen(nkVec4 color)
-{
-    glClearColor(color.r,color.g,color.b,color.a);
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-// VertexBuffer ================================================================
-
-struct VertexAttrib
-{
-    nkBool     enabled;
-    AttribType type;
-    nkU32      components;
-    nkU64      byte_offset;
+    GLenum usage;
+    GLenum type;
+    GLuint handle;
+    nkU64  bytes;
 };
 
-DEFINE_PRIVATE_TYPE(VertexBuffer)
+GLOBAL Buffer create_buffer(const BufferDesc& desc)
 {
-    nkU64        byte_stride;
-    GLuint       handle;
-    VertexAttrib attribs[16];
-};
+    Buffer buffer = ALLOCATE_PRIVATE_TYPE(Buffer);
+    if(!buffer) fatal_error("Failed to allocate buffer!");
 
-GLOBAL VertexBuffer vertex_buffer_create(void)
-{
-    VertexBuffer vbuf = ALLOCATE_PRIVATE_TYPE(VertexBuffer);
-    if(!vbuf)
-        fatal_error("Failed to allocate vertex buffer!");
-    glGenBuffers(1, &vbuf->handle);
-    memset(vbuf->attribs, 0, sizeof(vbuf->attribs));
-    return vbuf;
+    buffer->usage = BUFFER_USAGE_TO_GL[desc.usage];
+    buffer->type = BUFFER_TYPE_TO_GL[desc.type];
+
+    glGenBuffers(1, &buffer->handle);
+
+    glBindBuffer(buffer->type, buffer->handle);
+    glBufferData(buffer->type, desc.bytes, desc.data, buffer->usage);
+    glBindBuffer(buffer->type, GL_NONE);
+
+    return buffer;
 }
 
-GLOBAL void vertex_buffer_destroy(VertexBuffer vbuf)
+GLOBAL void free_buffer(Buffer buffer)
 {
-    if(!vbuf) return;
-    glDeleteBuffers(1, &vbuf->handle);
-    NK_FREE(vbuf);
+    NK_ASSERT(buffer);
+    glDeleteBuffers(1, &buffer->handle);
+    NK_FREE(buffer);
 }
 
-GLOBAL void vertex_buffer_set_stride(VertexBuffer vbuf, nkU64 byte_stride)
+GLOBAL void update_buffer(Buffer buffer, void* data, nkU64 bytes)
 {
-    NK_ASSERT(vbuf);
+    NK_ASSERT(buffer);
 
-    vbuf->byte_stride = byte_stride;
-}
-
-GLOBAL void vertex_buffer_enable_attrib(VertexBuffer vbuf, nkU32 index, AttribType type, nkU32 comps, nkU64 byte_offset)
-{
-    NK_ASSERT(vbuf);
-    NK_ASSERT(index < NK_ARRAY_SIZE(vbuf->attribs));
-
-    vbuf->attribs[index].enabled = NK_TRUE;
-    vbuf->attribs[index].type = type;
-    vbuf->attribs[index].components = comps;
-    vbuf->attribs[index].byte_offset = byte_offset;
-}
-
-GLOBAL void vertex_buffer_disable_attrib(VertexBuffer vbuf, nkU32 index)
-{
-    NK_ASSERT(vbuf);
-    NK_ASSERT(index < NK_ARRAY_SIZE(vbuf->attribs));
-
-    vbuf->attribs[index].enabled = NK_FALSE;
-}
-
-GLOBAL void vertex_buffer_update(VertexBuffer vbuf, void* data, nkU64 bytes, BufferType type)
-{
-    NK_ASSERT(vbuf);
-
-    GLenum gl_type = GL_NONE;
-    switch(type)
-    {
-        case BufferType_Static: gl_type = GL_STATIC_DRAW; break;
-        case BufferType_Dynamic: gl_type = GL_DYNAMIC_DRAW; break;
-        case BufferType_Stream: gl_type = GL_STREAM_DRAW; break;
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbuf->handle);
-    glBufferData(GL_ARRAY_BUFFER, bytes, data, gl_type);
-    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
-}
-
-GLOBAL void vertex_buffer_draw(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert_count)
-{
-    NK_ASSERT(vbuf);
-
-    if(!vert_count) return;
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbuf->handle);
-
-    // Map the primitive type to the appropriate GL enum.
-    GLenum primitive = GL_NONE;
-    switch(draw_mode)
-    {
-        case DrawMode_Points: primitive = GL_POINTS; break;
-        case DrawMode_LineStrip: primitive = GL_LINE_STRIP; break;
-        case DrawMode_LineLoop: primitive = GL_LINE_LOOP; break;
-        case DrawMode_Lines: primitive = GL_LINES; break;
-        case DrawMode_TriangleStrip: primitive = GL_TRIANGLE_STRIP; break;
-        case DrawMode_TriangleFan: primitive = GL_TRIANGLE_FAN; break;
-        case DrawMode_Triangles: primitive = GL_TRIANGLES; break;
-    }
-
-    // Setup the attributes for the buffer.
-    for(nkU64 i=0, n=NK_ARRAY_SIZE(vbuf->attribs); i<n; ++i)
-    {
-        VertexAttrib* attrib = &vbuf->attribs[i];
-        if(attrib->enabled)
-        {
-            GLenum attrib_type = GL_NONE;
-            switch(attrib->type)
-            {
-                case AttribType_SignedByte: attrib_type = GL_BYTE; break;
-                case AttribType_UnsignedByte: attrib_type = GL_UNSIGNED_BYTE; break;
-                case AttribType_SignedInt: attrib_type = GL_INT; break;
-                case AttribType_UnsignedInt: attrib_type = GL_UNSIGNED_INT; break;
-                case AttribType_Float: attrib_type = GL_FLOAT; break;
-            }
-
-            glVertexAttribPointer(NK_CAST(GLuint, i), attrib->components, attrib_type, GL_FALSE,
-                NK_CAST(GLsizei, vbuf->byte_stride), NK_CAST(void*,attrib->byte_offset));
-            glEnableVertexAttribArray(NK_CAST(GLuint, i));
-        }
-    }
-
-    // Draw the buffer data using the provided primitive type.
-    glDrawArrays(primitive, 0, NK_CAST(GLsizei,vert_count));
-
-    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
+    glBindBuffer(buffer->type, buffer->handle);
+    glBufferData(buffer->type, bytes, data, buffer->usage);
 }
 
 // =============================================================================
@@ -219,21 +131,20 @@ GLOBAL void vertex_buffer_draw(VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert
 
 DEFINE_PRIVATE_TYPE(Shader)
 {
-    GLuint program;
+    GLenum program;
 };
 
-INTERNAL GLuint shader_compile(const nkChar* source, GLint bytes, GLenum type)
+INTERNAL GLuint compile_shader(void* data, nkU64 bytes, GLenum type)
 {
-    const nkChar* sources[2] = { NULL, source };
-    const GLint lengths[2] = { -1, bytes };
+    const nkChar* sources[2] = { NULL, NK_CAST(const nkChar*, data) };
+    const GLint lengths[2] = { -1, NK_CAST(GLint, bytes) };
 
     #if defined(BUILD_NATIVE)
     if(type == GL_VERTEX_SHADER) sources[0] = "#version 330\n#define VERT_SHADER 1\n";
     if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 330\n#define FRAG_SHADER 1\n";
     #endif // BUILD_NATIVE
-
     #if defined(BUILD_WEB)
-    if(type == GL_VERTEX_SHADER) sources[0] = "#version 300 es\n#define VERT_SHADER 1\n";
+    if(type == GL_VERTEX_SHADER) sources[0] = "#version 300 es\n#define VERT_SHADER 1\nprecision mediump float;\n";
     if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 300 es\n#define FRAG_SHADER 1\nprecision mediump float;\n";
     #endif // BUILD_WEB
 
@@ -260,14 +171,13 @@ INTERNAL GLuint shader_compile(const nkChar* source, GLint bytes, GLenum type)
     return shader;
 }
 
-GLOBAL Shader shader_create(void* data, nkU64 bytes)
+GLOBAL Shader create_shader(const ShaderDesc& desc)
 {
     Shader shader = ALLOCATE_PRIVATE_TYPE(Shader);
-    if(!shader)
-        fatal_error("Failed to allocate shader!");
+    if(!shader) fatal_error("Failed to allocate shader!");
 
-    GLuint vert = shader_compile(NK_CAST(const nkChar*, data), NK_CAST(GLint, bytes), GL_VERTEX_SHADER);
-    GLuint frag = shader_compile(NK_CAST(const nkChar*, data), NK_CAST(GLint, bytes), GL_FRAGMENT_SHADER);
+    GLuint vert = compile_shader(desc.data, desc.bytes, GL_VERTEX_SHADER);
+    GLuint frag = compile_shader(desc.data, desc.bytes, GL_FRAGMENT_SHADER);
 
     shader->program = glCreateProgram();
 
@@ -297,89 +207,44 @@ GLOBAL Shader shader_create(void* data, nkU64 bytes)
     return shader;
 }
 
-GLOBAL void shader_destroy(Shader shader)
+GLOBAL void free_shader(Shader shader)
 {
-    if(!shader) return;
+    NK_ASSERT(shader);
     glDeleteProgram(shader->program);
     NK_FREE(shader);
 }
 
-GLOBAL void shader_bind(Shader shader)
+// =============================================================================
+
+// Sampler =====================================================================
+
+DEFINE_PRIVATE_TYPE(Sampler)
 {
-    if(!shader) glUseProgram(GL_NONE);
-    else glUseProgram(shader->program);
+    GLuint handle;
+};
+
+GLOBAL Sampler create_sampler(const SamplerDesc& desc)
+{
+    Sampler sampler = ALLOCATE_PRIVATE_TYPE(Sampler);
+    if(!sampler) fatal_error("Failed to allocate sampler!");
+
+    glGenSamplers(1, &sampler->handle);
+
+    glSamplerParameteri(sampler->handle, GL_TEXTURE_MIN_FILTER, SAMPLER_FILTER_TO_GL[desc.filter]);
+    glSamplerParameteri(sampler->handle, GL_TEXTURE_MAG_FILTER, SAMPLER_FILTER_TO_GL[desc.filter]);
+
+    glSamplerParameteri(sampler->handle, GL_TEXTURE_WRAP_S, SAMPLER_WRAP_TO_GL[desc.wrap_x]);
+    glSamplerParameteri(sampler->handle, GL_TEXTURE_WRAP_T, SAMPLER_WRAP_TO_GL[desc.wrap_y]);
+    glSamplerParameteri(sampler->handle, GL_TEXTURE_WRAP_R, SAMPLER_WRAP_TO_GL[desc.wrap_z]);
+
+    return sampler;
 }
 
-GLOBAL void shader_set_bool(Shader shader, const nkChar* name, nkBool val)
+GLOBAL void free_sampler(Sampler sampler)
 {
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniform1i(location, NK_CAST(nkS32, val));
-}
-
-GLOBAL void shader_set_int(Shader shader, const nkChar* name, nkS32 val)
-{
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniform1i(location, val);
-}
-
-GLOBAL void shader_set_float(Shader shader, const nkChar* name, nkF32 val)
-{
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniform1f(location, val);
-}
-
-GLOBAL void shader_set_vec2(Shader shader, const nkChar* name, nkVec2 val)
-{
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniform2fv(location, 1, val.raw);
-}
-
-GLOBAL void shader_set_vec3(Shader shader, const nkChar* name, nkVec3 val)
-{
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniform3fv(location, 1, val.raw);
-}
-
-GLOBAL void shader_set_vec4(Shader shader, const nkChar* name, nkVec4 val)
-{
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniform4fv(location, 1, val.raw);
-}
-
-GLOBAL void shader_set_mat2(Shader shader, const nkChar* name, nkMat2 val)
-{
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniformMatrix2fv(location, 1, GL_FALSE, val.raw);
-}
-
-GLOBAL void shader_set_mat3(Shader shader, const nkChar* name, nkMat3 val)
-{
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniformMatrix3fv(location, 1, GL_FALSE, val.raw);
-}
-
-GLOBAL void shader_set_mat4(Shader shader, const nkChar* name, nkMat4 val)
-{
-    NK_ASSERT(shader);
-    GLint location = glGetUniformLocation(shader->program, name);
-    if(location == -1) printf("No shader uniform found: %s\n", name);
-    glUniformMatrix4fv(location, 1, GL_FALSE, val.raw);
+    NK_ASSERT(sampler);
+    glDeleteSamplers(1,&sampler->handle);
+    NK_FREE(sampler);
 }
 
 // =============================================================================
@@ -388,191 +253,306 @@ GLOBAL void shader_set_mat4(Shader shader, const nkChar* name, nkMat4 val)
 
 DEFINE_PRIVATE_TYPE(Texture)
 {
-    GLuint handle;
-    nkVec2 size;
+    GLuint              handle;
+    GLenum              type;
+    OpenGLTextureFormat format;
+    nkS32               width;
+    nkS32               height;
 };
 
-INTERNAL GLenum sampler_filter_to_gl(SamplerFilter filter)
-{
-    switch(filter)
-    {
-        case SamplerFilter_Nearest: return GL_NEAREST;
-        case SamplerFilter_Linear: return GL_LINEAR;
-        case SamplerFilter_NearestWithNearestMips: return GL_NEAREST_MIPMAP_NEAREST;
-        case SamplerFilter_LinearWithNearestMips: return GL_LINEAR_MIPMAP_NEAREST;
-        case SamplerFilter_NearestWithLinearMips: return GL_NEAREST_MIPMAP_LINEAR;
-        case SamplerFilter_LinearWithLinearMips: return GL_LINEAR_MIPMAP_LINEAR;
-        default:
-        {
-            // Unsupported texture filter.
-            NK_ASSERT(NK_FALSE);
-        } break;
-    }
-    return GL_NONE;
-}
-
-INTERNAL GLenum sampler_wrap_to_gl(SamplerWrap wrap)
-{
-    switch(wrap)
-    {
-        case SamplerWrap_Repeat: return GL_REPEAT;
-        case SamplerWrap_Clamp: return GL_CLAMP_TO_EDGE;
-        default:
-        {
-            // Unsupported texture wrap.
-            NK_ASSERT(NK_FALSE);
-        } break;
-    }
-    return GL_NONE;
-}
-
-INTERNAL GLenum bpp_to_gl_format(nkS32 bpp)
-{
-    switch(bpp)
-    {
-        #if defined(BUILD_NATIVE)
-        case 1: return GL_RED;
-        case 2: return GL_RG;
-        #endif // BUILD_NATIVE
-
-        #if defined(BUILD_WEB)
-        case 1: return GL_LUMINANCE;
-        case 2: return GL_LUMINANCE_ALPHA;
-        #endif // BUILD_WEB
-
-        case 3: return GL_RGB;
-        case 4: return GL_RGBA;
-        default:
-        {
-            // Unsupported BPP that has no appropriate format.
-            NK_ASSERT(NK_FALSE);
-        } break;
-    }
-    return GL_NONE;
-}
-
-GLOBAL Texture texture_create(nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFilter filter, SamplerWrap wrap)
+GLOBAL Texture create_texture(const TextureDesc& desc)
 {
     Texture texture = ALLOCATE_PRIVATE_TYPE(Texture);
-    if(!texture)
-        fatal_error("Failed to allocate texture!");
-
-    glActiveTexture(GL_TEXTURE0);
+    if(!texture) fatal_error("Failed to allocate texture!");
 
     glGenTextures(1, &texture->handle);
-    glBindTexture(GL_TEXTURE_2D, texture->handle);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, sampler_filter_to_gl(filter));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, sampler_filter_to_gl(filter));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, sampler_wrap_to_gl(wrap));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, sampler_wrap_to_gl(wrap));
+    texture->type = TEXTURE_TYPE_TO_GL[desc.type];
+    texture->format = TEXTURE_FORMAT_TO_GL[desc.format];
 
-    GLenum gl_format = bpp_to_gl_format(bpp);
-    glTexImage2D(GL_TEXTURE_2D, 0, gl_format, w,h, 0, gl_format, GL_UNSIGNED_BYTE, data);
+    glBindTexture(texture->type, texture->handle);
 
-    if(filter > SamplerFilter_Linear)
+    switch(desc.type)
     {
-        glGenerateMipmap(GL_TEXTURE_2D);
+        case TextureType_2D:
+        {
+            glTexImage2D(texture->type, 0, texture->format.internal_format, desc.width,desc.height,
+                0, texture->format.format, texture->format.type, desc.data);
+        } break;
+        default:
+        {
+            NK_ASSERT(NK_FALSE); // Unknown texture type!
+        } break;
     }
 
-    texture->size.x = NK_CAST(nkF32, w);
-    texture->size.y = NK_CAST(nkF32, h);
+    glBindTexture(texture->type, GL_NONE);
+
+    texture->width = desc.width;
+    texture->height = desc.height;
 
     return texture;
 }
 
-GLOBAL void texture_destroy(Texture texture)
+GLOBAL void free_texture(Texture texture)
 {
-    if(!texture) return;
-    glDeleteTextures(1, &texture->handle);
+    NK_ASSERT(texture);
+    glDeleteTextures(1,&texture->handle);
     NK_FREE(texture);
 }
 
-GLOBAL void texture_bind(Texture texture, nkS32 unit)
-{
-    glActiveTexture(GL_TEXTURE0 + unit);
-    if(!texture) glBindTexture(GL_TEXTURE_2D, GL_NONE);
-    else glBindTexture(GL_TEXTURE_2D, texture->handle);
-}
-
-GLOBAL nkVec2 texture_get_size(Texture texture)
+GLOBAL void resize_texture(Texture texture, nkS32 width, nkS32 height)
 {
     NK_ASSERT(texture);
-    return texture->size;
+
+    glBindTexture(texture->type, texture->handle);
+    glTexImage2D(texture->type, 0, texture->format.internal_format, width,height,
+        0, texture->format.format, texture->format.type, NULL);
+    glBindTexture(texture->type, GL_NONE);
+
+    texture->width = width;
+    texture->height = height;
 }
 
-GLOBAL nkF32 texture_get_width (Texture texture)
+GLOBAL nkVec2 get_texture_size(Texture texture)
 {
     NK_ASSERT(texture);
-    return texture->size.x;
+    nkVec2 size;
+    size.x = NK_CAST(nkF32, texture->width);
+    size.y = NK_CAST(nkF32, texture->height);
+    return size;
 }
 
-GLOBAL nkF32 texture_get_height(Texture texture)
+GLOBAL nkS32 get_texture_width(Texture texture)
 {
     NK_ASSERT(texture);
-    return texture->size.y;
+    return texture->width;
+}
+
+GLOBAL nkS32 get_texture_height(Texture texture)
+{
+    NK_ASSERT(texture);
+    return texture->height;
 }
 
 // =============================================================================
 
-// RenderTarget ================================================================
+// Render Pass =================================================================
 
-DEFINE_PRIVATE_TYPE(RenderTarget)
+DEFINE_PRIVATE_TYPE(RenderPass)
 {
-    GLuint        handle;
-    Texture       color_target;
-    SamplerFilter filter;
-    SamplerWrap   wrap;
+    GLuint         framebuffer;
+    RenderPassDesc desc;
 };
 
-GLOBAL RenderTarget render_target_create(nkS32 w, nkS32 h, SamplerFilter filter, SamplerWrap wrap)
+INTERNAL void bind_vertex_layout(const VertexLayout& vertex_layout)
 {
-    RenderTarget target = ALLOCATE_PRIVATE_TYPE(RenderTarget);
-    if(!target)
-        fatal_error("Failed to allocate render target!");
-    target->handle = GL_NONE;
-    target->color_target = NULL;
-    target->filter = filter;
-    target->wrap = wrap;
-    render_target_resize(target, w, h);
-    return target;
+    // Setup the vertex attributes using the provided layout.
+    for(nkS32 i=0; i<vertex_layout.attrib_count; ++i)
+    {
+        const VertexAttrib* attrib = &vertex_layout.attribs[i];
+        if(attrib->enabled)
+        {
+            GLenum type = ATTRIB_TYPE_TO_GL[attrib->type];
+            glEnableVertexAttribArray(attrib->index);
+            glVertexAttribPointer(attrib->index, attrib->components, type, GL_FALSE,
+                NK_CAST(GLsizei, vertex_layout.byte_stride), NK_CAST(const void*, attrib->byte_offset));
+        }
+        else
+        {
+            glDisableVertexAttribArray(attrib->index);
+        }
+    }
 }
 
-GLOBAL void render_target_destroy(RenderTarget target)
+GLOBAL RenderPass create_render_pass(const RenderPassDesc& desc)
 {
-    if(!target) return;
-    glDeleteFramebuffers(1, &target->handle);
-    texture_destroy(target->color_target);
-    NK_FREE(target);
+    RenderPass pass = ALLOCATE_PRIVATE_TYPE(RenderPass);
+    if(!pass) fatal_error("Failed to allocate render pass!");
+
+    pass->desc = desc;
+
+    if(pass->desc.color_targets[0] == BACKBUFFER && pass->desc.num_color_targets == 1)
+    {
+        pass->framebuffer = GL_NONE;
+    }
+    else
+    {
+        glGenFramebuffers(1, &pass->framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, pass->framebuffer);
+
+        for(nkU32 i=0; i<pass->desc.num_color_targets; ++i)
+        {
+            Texture target = pass->desc.color_targets[i];
+            NK_ASSERT(target->type == GL_TEXTURE_2D);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, target->handle, 0);
+        }
+        if(pass->desc.depth_stencil_target)
+        {
+            Texture target = pass->desc.depth_stencil_target;
+            NK_ASSERT(target->type == GL_TEXTURE_2D);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, target->handle, 0);
+        }
+
+        NK_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
+    }
+
+    return pass;
 }
 
-GLOBAL void render_target_resize(RenderTarget target, nkS32 w, nkS32 h)
+GLOBAL void free_render_pass(RenderPass pass)
 {
-    NK_ASSERT(target);
-
-    if(w <= 0 || h <= 0) return;
-
-    // Delete the old contents (if any).
-    glDeleteFramebuffers(1, &target->handle);
-    texture_destroy(target->color_target);
-
-    glGenFramebuffers(1, &target->handle);
-    glBindFramebuffer(GL_FRAMEBUFFER, target->handle);
-
-    target->color_target = texture_create(w,h, 4, NULL, target->filter, target->wrap);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target->color_target->handle, 0);
-
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        fatal_error("Failed to complete framebuffer resize!");
-
-    glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
+    NK_ASSERT(pass);
+    if(pass->framebuffer != GL_NONE)
+        glDeleteFramebuffers(1, &pass->framebuffer);
+    NK_FREE(pass);
 }
 
-GLOBAL void render_target_bind(RenderTarget target)
+GLOBAL void begin_render_pass(RenderPass pass)
 {
-    if(!target) glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
-    else glBindFramebuffer(GL_FRAMEBUFFER, target->handle);
+    NK_ASSERT(!g_pass_started); // Render pass is already in progress!
+
+    g_pass_started = NK_TRUE;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, pass->framebuffer);
+
+    // Clear the target.
+    if(pass->desc.clear)
+    {
+        // @Improve: Only clear necessary targets...
+        glClearColor(pass->desc.clear_color.r,pass->desc.clear_color.g,pass->desc.clear_color.b,pass->desc.clear_color.a);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+    }
+
+    // Setup depth read/write.
+    if(pass->desc.depth_read) glEnable(GL_DEPTH_TEST);
+    else glDisable(GL_DEPTH_TEST);
+    glDepthMask(pass->desc.depth_write);
+    GLenum depth_func = DEPTH_OP_TO_GL[pass->desc.depth_op];
+    glDepthFunc(depth_func);
+
+    // Setup cull face mode.
+    switch(pass->desc.cull_face)
+    {
+        case CullFace_None:
+        {
+            glDisable(GL_CULL_FACE);
+        } break;
+        case CullFace_Front:
+        {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
+        } break;
+        case CullFace_Back:
+        {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+        } break;
+    }
+
+    // Setup blend mode.
+    switch(pass->desc.blend_mode)
+    {
+        case BlendMode_None:
+        {
+            glDisable(GL_BLEND);
+        } break;
+        case BlendMode_Alpha:
+        {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
+            glEnable(GL_BLEND);
+        } break;
+        case BlendMode_PremultipliedAlpha:
+        {
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
+            glEnable(GL_BLEND);
+        } break;
+    }
+
+    // Set the draw mode.
+    g_current_draw_mode = pass->desc.draw_mode;
+}
+
+GLOBAL void end_render_pass(void)
+{
+    NK_ASSERT(g_pass_started); // Render pass has not been started!
+    g_pass_started = NK_FALSE;
+}
+
+GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
+{
+    GLint   vx = NK_CAST(GLint,   x);
+    GLint   vy = NK_CAST(GLint,   y);
+    GLsizei vw = NK_CAST(GLsizei, w);
+    GLsizei vh = NK_CAST(GLsizei, h);
+
+    glViewport(vx,vy,vw,vh);
+}
+
+GLOBAL void begin_scissor(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
+{
+    GLint   sx = NK_CAST(GLint,   x);
+    GLint   sy = NK_CAST(GLint,   get_window_height()-(y+h));
+    GLsizei sw = NK_CAST(GLsizei, w);
+    GLsizei sh = NK_CAST(GLsizei, h);
+
+    glScissor(sx,sy,sw,sh);
+    glEnable(GL_SCISSOR_TEST);
+}
+
+GLOBAL void end_scissor(void)
+{
+    glDisable(GL_SCISSOR_TEST);
+}
+
+GLOBAL void bind_buffer(Buffer buffer, nkS32 slot)
+{
+    NK_ASSERT(g_pass_started); // Cannot bind outside of a render pass!
+    NK_ASSERT(buffer);
+
+    if(buffer->type != GL_UNIFORM_BUFFER) glBindBuffer(buffer->type, buffer->handle);
+    else glBindBufferBase(buffer->type, slot, buffer->handle);
+}
+
+GLOBAL void bind_shader(Shader shader)
+{
+    NK_ASSERT(g_pass_started); // Cannot bind outside of a render pass!
+    NK_ASSERT(shader);
+
+    glUseProgram(shader->program);
+}
+
+GLOBAL void bind_texture(Texture texture, Sampler sampler, nkS32 unit)
+{
+    NK_ASSERT(g_pass_started); // Cannot bind outside of a render pass!
+    NK_ASSERT(texture);
+
+    glActiveTexture(GL_TEXTURE0+unit);
+    glBindTexture(texture->type, texture->handle);
+    if(sampler) glBindSampler(unit, sampler->handle);
+    else glBindSampler(unit, GL_NONE);
+}
+
+GLOBAL void draw_arrays(const VertexLayout& vertex_layout, nkU64 vertex_count)
+{
+    NK_ASSERT(g_pass_started); // Cannot draw outside of a render pass!
+
+    GLenum mode = DRAW_MODE_TO_GL[g_current_draw_mode];
+    bind_vertex_layout(vertex_layout);
+    glDrawArrays(mode, 0, NK_CAST(GLsizei,vertex_count));
+}
+
+GLOBAL void draw_elements(const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type)
+{
+    NK_ASSERT(g_pass_started); // Cannot draw outside of a render pass!
+
+    GLenum type = ELEMENT_TYPE_TO_GL[element_type];
+    GLenum mode = DRAW_MODE_TO_GL[g_current_draw_mode];
+    bind_vertex_layout(vertex_layout);
+    glDrawElements(mode, NK_CAST(GLsizei,element_count), type, NULL);
 }
 
 // =============================================================================

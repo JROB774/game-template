@@ -1,5 +1,122 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
+GLOBAL void init_render_system(void);
+GLOBAL void quit_render_system(void);
+
+// Buffer ======================================================================
+DECLARE_PRIVATE_TYPE(Buffer);
+
+NK_ENUM(BufferType, nkS32)
+{
+    BufferType_Vertex,
+    BufferType_Element,
+    BufferType_Uniform,
+    BufferType_TOTAL
+};
+
+NK_ENUM(BufferUsage, nkS32)
+{
+    BufferUsage_Static,
+    BufferUsage_Dynamic,
+    BufferUsage_Stream,
+    BufferUsage_TOTAL
+};
+
+struct BufferDesc
+{
+    BufferType  type  = BufferType_Vertex;
+    BufferUsage usage = BufferUsage_Static;
+    void*       data  = NULL;
+    nkU64       bytes = 0;
+};
+
+GLOBAL Buffer create_buffer(const BufferDesc& desc);
+GLOBAL void   free_buffer  (Buffer buffer);
+GLOBAL void   update_buffer(Buffer buffer, void* data, nkU64 bytes);
+// =============================================================================
+
+// Shader ======================================================================
+DECLARE_PRIVATE_TYPE(Shader);
+
+struct ShaderDesc
+{
+    void* data  = NULL;
+    nkU64 bytes = 0;
+};
+
+GLOBAL Shader create_shader(const ShaderDesc& desc);
+GLOBAL void   free_shader  (Shader shader);
+// =============================================================================
+
+// Sampler =====================================================================
+DECLARE_PRIVATE_TYPE(Sampler);
+
+NK_ENUM(SamplerFilter, nkS32)
+{
+    SamplerFilter_Nearest,
+    SamplerFilter_Linear,
+    SamplerFilter_TOTAL
+};
+
+NK_ENUM(SamplerWrap, nkS32)
+{
+    SamplerWrap_Repeat,
+    SamplerWrap_Clamp,
+    SamplerWrap_TOTAL
+};
+
+struct SamplerDesc
+{
+    SamplerFilter filter = SamplerFilter_Nearest;
+    SamplerWrap   wrap_x = SamplerWrap_Clamp;
+    SamplerWrap   wrap_y = SamplerWrap_Clamp;
+    SamplerWrap   wrap_z = SamplerWrap_Clamp;
+};
+
+GLOBAL Sampler create_sampler(const SamplerDesc& desc);
+GLOBAL void    free_sampler  (Sampler sampler);
+// =============================================================================
+
+// Texture =====================================================================
+DECLARE_PRIVATE_TYPE(Texture);
+
+NK_ENUM(TextureType, nkS32)
+{
+    TextureType_2D,
+    TextureType_TOTAL
+};
+
+NK_ENUM(TextureFormat, nkS32)
+{
+    TextureFormat_R,
+    TextureFormat_RGB,
+    TextureFormat_RGBA,
+    TextureFormat_D24S8,
+    TextureFormat_TOTAL
+};
+
+struct TextureDesc
+{
+    TextureType   type   = TextureType_2D;
+    TextureFormat format = TextureFormat_RGBA;
+    nkS32         width  = 0;
+    nkS32         height = 0;
+    void*         data   = NULL;
+};
+
+GLOBAL Texture create_texture    (const TextureDesc& desc);
+GLOBAL void    free_texture      (Texture texture);
+GLOBAL void    resize_texture    (Texture texture, nkS32 width, nkS32 height);
+GLOBAL nkVec2  get_texture_size  (Texture texture);
+GLOBAL nkS32   get_texture_width (Texture texture);
+GLOBAL nkS32   get_texture_height(Texture texture);
+// =============================================================================
+
+// Render Pass =================================================================
+INTERNAL constexpr Texture BACKBUFFER = NULL;
+
+DECLARE_PRIVATE_TYPE(RenderPass);
+
 NK_ENUM(DrawMode, nkS32)
 {
     DrawMode_Points,
@@ -8,7 +125,46 @@ NK_ENUM(DrawMode, nkS32)
     DrawMode_Lines,
     DrawMode_TriangleStrip,
     DrawMode_TriangleFan,
-    DrawMode_Triangles
+    DrawMode_Triangles,
+    DrawMode_TOTAL
+};
+
+NK_ENUM(BlendMode, nkS32)
+{
+    BlendMode_None,
+    BlendMode_Alpha,
+    BlendMode_PremultipliedAlpha,
+    BlendMode_TOTAL
+};
+
+NK_ENUM(CullFace, nkS32)
+{
+    CullFace_None,
+    CullFace_Front,
+    CullFace_Back,
+    CullFace_FrontAndBack,
+    CullFace_TOTAL
+};
+
+NK_ENUM(DepthOp, nkS32)
+{
+    DepthOp_Never,
+    DepthOp_Equal,
+    DepthOp_NotEqual,
+    DepthOp_Less,
+    DepthOp_LessEqual,
+    DepthOp_Greater,
+    DepthOp_GreaterEqual,
+    DepthOp_Always,
+    DepthOp_TOTAL
+};
+
+NK_ENUM(ElementType, nkS32)
+{
+    ElementType_UnsignedByte,
+    ElementType_UnsignedShort,
+    ElementType_UnsignedInt,
+    ElementType_TOTAL
 };
 
 NK_ENUM(AttribType, nkS32)
@@ -17,97 +173,53 @@ NK_ENUM(AttribType, nkS32)
     AttribType_UnsignedByte,
     AttribType_SignedInt,
     AttribType_UnsignedInt,
-    AttribType_Float
+    AttribType_Float,
+    AttribType_TOTAL
 };
 
-NK_ENUM(BufferType, nkS32)
+struct VertexAttrib
 {
-    BufferType_Static,
-    BufferType_Dynamic,
-    BufferType_Stream
+    nkU32      index       = 0;
+    AttribType type        = AttribType_Float;
+    nkU32      components  = 4;
+    nkU64      byte_offset = 0;
+    nkBool     enabled     = NK_FALSE;
 };
 
-NK_ENUM(SamplerFilter, nkS32)
+struct VertexLayout
 {
-    SamplerFilter_Nearest,
-    SamplerFilter_Linear,
-    SamplerFilter_NearestWithNearestMips,
-    SamplerFilter_LinearWithNearestMips,
-    SamplerFilter_NearestWithLinearMips,
-    SamplerFilter_LinearWithLinearMips
+    VertexAttrib attribs[16]  = {};
+    nkU64        attrib_count = 0;
+    nkU64        byte_stride  = 0;
 };
 
-NK_ENUM(SamplerWrap, nkS32)
+struct RenderPassDesc
 {
-    SamplerWrap_Repeat,
-    SamplerWrap_Clamp
+    Texture      color_targets[16]    = { BACKBUFFER };
+    Texture      depth_stencil_target = NULL;
+    nkU32        num_color_targets    = 1;
+    DrawMode     draw_mode            = DrawMode_Triangles;
+    BlendMode    blend_mode           = BlendMode_None;
+    CullFace     cull_face            = CullFace_Back;
+    DepthOp      depth_op             = DepthOp_Less;
+    nkBool       depth_read           = NK_TRUE;
+    nkBool       depth_write          = NK_TRUE;
+    nkBool       clear                = NK_FALSE;
+    nkVec4       clear_color          = NK_V4_BLACK;
 };
 
-NK_ENUM(BlendMode, nkS32)
-{
-    BlendMode_None,
-    BlendMode_Alpha,
-    BlendMode_PremultipliedAlpha
-};
-
-GLOBAL void init_render_system(void);
-GLOBAL void quit_render_system(void);
-
-GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h);
-
-GLOBAL void set_blend_mode(BlendMode blend_mode);
-
-GLOBAL void clear_screen(nkF32 r, nkF32 g, nkF32 b, nkF32 a = 1.0f);
-GLOBAL void clear_screen(nkVec3 color);
-GLOBAL void clear_screen(nkVec4 color);
-
-// VertexBuffer ================================================================
-DECLARE_PRIVATE_TYPE(VertexBuffer);
-
-GLOBAL VertexBuffer vertex_buffer_create        (void);
-GLOBAL void         vertex_buffer_destroy       (VertexBuffer vbuf);
-GLOBAL void         vertex_buffer_set_stride    (VertexBuffer vbuf, nkU64 byte_stride);
-GLOBAL void         vertex_buffer_enable_attrib (VertexBuffer vbuf, nkU32 index, AttribType type, nkU32 comps, nkU64 byte_offset);
-GLOBAL void         vertex_buffer_disable_attrib(VertexBuffer vbuf, nkU32 index);
-GLOBAL void         vertex_buffer_update        (VertexBuffer vbuf, void* data, nkU64 bytes, BufferType type);
-GLOBAL void         vertex_buffer_draw          (VertexBuffer vbuf, DrawMode draw_mode, nkU64 vert_count);
-// =============================================================================
-
-// Shader ======================================================================
-DECLARE_PRIVATE_TYPE(Shader);
-
-GLOBAL Shader shader_create   (void* data, nkU64 bytes);
-GLOBAL void   shader_destroy  (Shader shader);
-GLOBAL void   shader_bind     (Shader shader);
-GLOBAL void   shader_set_bool (Shader shader, const nkChar* name, nkBool val);
-GLOBAL void   shader_set_int  (Shader shader, const nkChar* name, nkS32  val);
-GLOBAL void   shader_set_float(Shader shader, const nkChar* name, nkF32  val);
-GLOBAL void   shader_set_vec2 (Shader shader, const nkChar* name, nkVec2 val);
-GLOBAL void   shader_set_vec3 (Shader shader, const nkChar* name, nkVec3 val);
-GLOBAL void   shader_set_vec4 (Shader shader, const nkChar* name, nkVec4 val);
-GLOBAL void   shader_set_mat2 (Shader shader, const nkChar* name, nkMat2 val);
-GLOBAL void   shader_set_mat3 (Shader shader, const nkChar* name, nkMat3 val);
-GLOBAL void   shader_set_mat4 (Shader shader, const nkChar* name, nkMat4 val);
-// =============================================================================
-
-// Texture =====================================================================
-DECLARE_PRIVATE_TYPE(Texture);
-
-GLOBAL Texture texture_create    (nkS32 w, nkS32 h, nkS32 bpp, void* data, SamplerFilter filter, SamplerWrap wrap);
-GLOBAL void    texture_destroy   (Texture texture);
-GLOBAL void    texture_bind      (Texture texture, nkS32 unit);
-GLOBAL nkVec2  texture_get_size  (Texture texture);
-GLOBAL nkF32   texture_get_width (Texture texture);
-GLOBAL nkF32   texture_get_height(Texture texture);
-// =============================================================================
-
-// RenderTarget ================================================================
-DECLARE_PRIVATE_TYPE(RenderTarget);
-
-GLOBAL RenderTarget render_target_create (nkS32 w, nkS32 h, SamplerFilter filter, SamplerWrap wrap);
-GLOBAL void         render_target_destroy(RenderTarget target);
-GLOBAL void         render_target_resize (RenderTarget target, nkS32 w, nkS32 h);
-GLOBAL void         render_target_bind   (RenderTarget target);
+GLOBAL RenderPass create_render_pass(const RenderPassDesc& desc);
+GLOBAL void       free_render_pass  (RenderPass pass);
+GLOBAL void       begin_render_pass (RenderPass pass);
+GLOBAL void       end_render_pass   (void);
+GLOBAL void       set_viewport      (nkF32 x, nkF32 y, nkF32 w, nkF32 h);
+GLOBAL void       begin_scissor     (nkF32 x, nkF32 y, nkF32 w, nkF32 h);
+GLOBAL void       end_scissor       (void);
+GLOBAL void       bind_buffer       (Buffer buffer, nkS32 slot = 0);
+GLOBAL void       bind_shader       (Shader shader);
+GLOBAL void       bind_texture      (Texture texture, Sampler sampler, nkS32 unit);
+GLOBAL void       draw_arrays       (const VertexLayout& vertex_layout, nkU64 vertex_count);
+GLOBAL void       draw_elements     (const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type);
 // =============================================================================
 
 /*////////////////////////////////////////////////////////////////////////////*/

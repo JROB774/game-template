@@ -193,7 +193,12 @@ GLOBAL TrueTypeFont create_truetype_font(const TrueTypeFontDesc& desc)
         bake_font_at_size(font, desc.px_sizes[i]);
     }
 
-    font->atlas_texture = texture_create(FONT_ATLAS_SIZE, FONT_ATLAS_SIZE, 1, font->atlas_pixels, SamplerFilter_Nearest, SamplerWrap_Clamp);
+    TextureDesc texture_desc;
+    texture_desc.format = TextureFormat_R;
+    texture_desc.width  = FONT_ATLAS_SIZE;
+    texture_desc.height = FONT_ATLAS_SIZE;
+    texture_desc.data   = font->atlas_pixels;
+    font->atlas_texture = create_texture(texture_desc);
 
     font->current_size = desc.px_sizes[0];
 
@@ -204,7 +209,7 @@ GLOBAL void free_truetype_font(TrueTypeFont font)
 {
     NK_ASSERT(font);
 
-    texture_destroy(font->atlas_texture);
+    free_texture(font->atlas_texture);
     NK_FREE(font->atlas_pixels);
 
     nk_array_free(&font->ranges);
@@ -237,8 +242,14 @@ GLOBAL void set_truetype_font_size(TrueTypeFont font, nkS32 new_size)
         // @Improve: Add a way of updating a texture's pixels without fully recrating it...
 
         // We need to update the texture with the new font data.
-        texture_destroy(font->atlas_texture);
-        texture_create(FONT_ATLAS_SIZE, FONT_ATLAS_SIZE, 1, font->atlas_pixels, SamplerFilter_Nearest, SamplerWrap_Clamp);
+        free_texture(font->atlas_texture);
+
+        TextureDesc texture_desc;
+        texture_desc.format = TextureFormat_R;
+        texture_desc.width  = FONT_ATLAS_SIZE;
+        texture_desc.height = FONT_ATLAS_SIZE;
+        texture_desc.data   = font->atlas_pixels;
+        font->atlas_texture = create_texture(texture_desc);
     }
 }
 

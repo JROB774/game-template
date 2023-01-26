@@ -8,17 +8,6 @@
 #define GLEW_STATIC
 #define NK_STATIC
 
-#if defined(BUILD_WEB)
-#include <emscripten.h>
-#endif // BUILD_WEB
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <time.h>
-#include <float.h>
-
 #include <nk_define.h>
 #include <nk_math.h>
 #include <nk_filesys.h>
@@ -27,6 +16,13 @@
 #include <nk_string.h>
 #include <nk_hashmap.h>
 #include <nk_defer.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <time.h>
+#include <float.h>
 
 #include <stb_image.h>
 
@@ -83,16 +79,12 @@ GLOBAL void app_draw(void)
     nkF32 tx = ww * 0.5f;
     nkF32 ty = wh * 0.5f;
 
-    nkF32 scale = wh / (texture_get_height(texture) + 256.0f);
-
-    set_blend_mode(BlendMode_Alpha);
-    set_viewport(0.0f,0.0f,ww,wh);
+    nkF32 scale = wh / (get_texture_height(texture) + 256.0f);
 
     imm_set_projection(nk_orthographic(0.0f,ww,wh,0.0f));
+    imm_set_viewport({ 0.0f,0.0f,ww,wh });
 
-    clear_screen(NK_V3_MAGENTA);
-
-    imm_texture_ex(texture, tx,ty, scale,scale, g_welcome_angle);
+    imm_texture_ex(texture, tx,ty, scale,scale, g_welcome_angle, NULL);
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/

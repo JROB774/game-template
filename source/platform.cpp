@@ -1,5 +1,9 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
+#if defined(BUILD_WEB)
+#include <emscripten.h>
+#endif // BUILD_WEB
+
 #include <SDL.h>
 #include <SDL_mixer.h>
 
@@ -285,7 +289,9 @@ INTERNAL void main_loop(void)
         update_timer -= dt;
     }
 
+    imm_begin_frame();
     app_draw();
+    imm_end_frame();
 
     SDL_GL_SwapWindow(g_ctx.window);
 

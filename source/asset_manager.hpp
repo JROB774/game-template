@@ -46,12 +46,13 @@ Asset<T>::~Asset(void)
 template<>
 Shader asset_load<Shader>(void* data, nkU64 size, nkBool from_npak, void* userdata)
 {
-    return shader_create(data, size);
+    ShaderDesc sd = { data, size };
+    return create_shader(sd);
 }
 template<>
 void asset_free<Shader>(Asset<Shader>& asset)
 {
-    shader_destroy(asset.data);
+    free_shader(asset.data);
 }
 template<>
 const nkChar* asset_path<Shader>(void)
@@ -70,12 +71,18 @@ Texture asset_load<Texture>(void* data, nkU64 size, nkBool from_npak, void* user
     if(!pixels) return NULL;
     NK_DEFER(stbi_image_free(pixels));
 
-    return texture_create(w,h,4, pixels, SamplerFilter_Nearest, SamplerWrap_Clamp);
+    TextureDesc desc;
+    desc.format = TextureFormat_RGBA;
+    desc.width  = w;
+    desc.height = h;
+    desc.data   = pixels;
+
+    return create_texture(desc);
 }
 template<>
 void asset_free<Texture>(Asset<Texture>& asset)
 {
-    texture_destroy(asset.data);
+    free_texture(asset.data);
 }
 template<>
 const nkChar* asset_path<Texture>(void)
