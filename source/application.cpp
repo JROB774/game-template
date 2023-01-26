@@ -48,6 +48,7 @@
 #endif // BUILD_WEB
 
 #include "utility.hpp"
+#include "application.hpp"
 #include "audio.hpp"
 #include "platform.hpp"
 #include "input.hpp"
@@ -68,37 +69,29 @@
 static Texture g_welcome_texture;
 static nkF32   g_welcome_angle;
 
-static void game_init(void);
-static void game_quit(void);
-static void game_tick(nkF32 dt);
-static void game_draw(void);
-
-static void entry_point(GameDesc* desc)
+static void app_main(AppDesc* desc)
 {
-    desc->init = game_init;
-    desc->quit = game_quit;
-    desc->tick = game_tick;
-    desc->draw = game_draw;
+    // Does nothing, we are using the defaults...
 }
 
-static void game_init(void)
+static void app_init(void)
 {
     g_welcome_texture = load_asset_texture("welcome.png", SamplerFilter_Nearest, SamplerWrap_Clamp);
 }
 
-static void game_quit(void)
+static void app_quit(void)
 {
     texture_destroy(g_welcome_texture);
 }
 
-static void game_tick(nkF32 dt)
+static void app_tick(nkF32 dt)
 {
     static nkF32 timer = 0.0f;
     timer += dt;
     g_welcome_angle = nk_sin_range(-0.25f, 0.25f, timer * 3.0f);
 }
 
-static void game_draw(void)
+static void app_draw(void)
 {
     nkF32 ww = NK_CAST(nkF32, get_window_width());
     nkF32 wh = NK_CAST(nkF32, get_window_height());

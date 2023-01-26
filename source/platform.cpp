@@ -21,7 +21,7 @@ struct ProgramState
 
 struct PlatformContext
 {
-    GameDesc      game_desc;
+    AppDesc       app_desc;
     SDL_Window*   window;
     SDL_GLContext glcontext;
     nkBool        running;
@@ -170,11 +170,11 @@ static void main_init(void)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     #endif // BUILD_WEB
 
-    g_ctx.window = SDL_CreateWindow(g_ctx.game_desc.title, SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,
-        g_ctx.game_desc.window_size.x,g_ctx.game_desc.window_size.y, WINDOW_FLAGS);
+    g_ctx.window = SDL_CreateWindow(g_ctx.app_desc.title, SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,
+        g_ctx.app_desc.window_size.x,g_ctx.app_desc.window_size.y, WINDOW_FLAGS);
     if(!g_ctx.window)
         fatal_error("Failed to create application window: %s", SDL_GetError());
-    SDL_SetWindowMinimumSize(g_ctx.window, g_ctx.game_desc.window_min.x,g_ctx.game_desc.window_min.y);
+    SDL_SetWindowMinimumSize(g_ctx.window, g_ctx.app_desc.window_min.x,g_ctx.app_desc.window_min.y);
 
     g_ctx.glcontext = SDL_GL_CreateContext(g_ctx.window);
     if(!g_ctx.glcontext)
@@ -197,7 +197,7 @@ static void main_init(void)
 
     imm_init();
 
-    g_ctx.game_desc.init();
+    app_init();
 
     load_program_state();
 
@@ -208,7 +208,7 @@ static void main_quit(void)
 {
     save_program_state();
 
-    g_ctx.game_desc.quit();
+    app_quit();
 
     imm_quit();
 
@@ -233,7 +233,7 @@ static void main_loop(void)
     static nkU64 elapsed_counter = 0;
     static nkF32 update_timer    = 0.0f;
 
-    nkF32 dt = 1.0f / g_ctx.game_desc.tick_rate; // We use a fixed update rate to keep things deterministic.
+    nkF32 dt = 1.0f / g_ctx.app_desc.tick_rate; // We use a fixed update rate to keep things deterministic.
 
     if(perf_frequency == 0)
     {
@@ -277,12 +277,12 @@ static void main_loop(void)
     while(update_timer >= dt)
     {
         update_input_state();
-        g_ctx.game_desc.tick(dt);
+        app_tick(dt);
         reset_input_state();
         update_timer -= dt;
     }
 
-    g_ctx.game_desc.draw();
+    app_draw();
 
     SDL_GL_SwapWindow(g_ctx.window);
 
@@ -297,7 +297,7 @@ static void main_loop(void)
     #if defined(BUILD_DEBUG)
     nkF32 current_fps = NK_CAST(nkF32,perf_frequency) / NK_CAST(nkF32,elapsed_counter);
     nkChar title_buffer[1024] = NK_ZERO_MEM;
-    snprintf(title_buffer, NK_ARRAY_SIZE(title_buffer), "%s (FPS: %f)", g_ctx.game_desc.title, current_fps);
+    snprintf(title_buffer, NK_ARRAY_SIZE(title_buffer), "%s (FPS: %f)", g_ctx.app_desc.title, current_fps);
     SDL_SetWindowTitle(g_ctx.window, title_buffer);
     #endif // BUILD_DEBUG
 
@@ -313,7 +313,7 @@ static void main_loop(void)
 #if defined(BUILD_NATIVE)
 int main(int argc, char** argv)
 {
-    entry_point(&g_ctx.game_desc);
+    app_main(&g_ctx.app_desc);
 
     main_init();
     load_program_state();
@@ -334,7 +334,7 @@ extern "C" void main_callback(void)
 }
 int main(int argc, char** argv)
 {
-    entry_point(&g_ctx.game_desc);
+    app_main(&g_ctx.app_desc);
 
     EM_ASM
     (
