@@ -92,8 +92,8 @@ GLOBAL Texture create_texture    (nkS32 w, nkS32 h, nkS32 bpp, void* data, Sampl
 GLOBAL void    free_texture      (Texture texture);
 GLOBAL void    bind_texture      (Texture texture, nkS32 unit);
 GLOBAL nkVec2  get_texture_size  (Texture texture);
-GLOBAL nkF32   get_texture_width (Texture texture);
-GLOBAL nkF32   get_texture_height(Texture texture);
+GLOBAL nkS32   get_texture_width (Texture texture);
+GLOBAL nkS32   get_texture_height(Texture texture);
 
 /*////////////////////////////////////////////////////////////////////////////*/
 /*////////////////////////////////////////////////////////////////////////////*/
@@ -106,7 +106,7 @@ struct ImmVertex
     nkVec4 col;
 };
 
-struct ImmRect
+struct ImmClip
 {
     nkF32 x,y,w,h;
 };
@@ -137,10 +137,10 @@ GLOBAL void imm_circle_filled (nkF32  x, nkF32  y, nkF32  r, nkS32  n, nkVec4 co
 
 GLOBAL void imm_begin_texture_batch(Texture tex);
 GLOBAL void imm_end_texture_batch (void);
-GLOBAL void imm_texture           (Texture tex, nkF32 x, nkF32 y,                                                  const ImmRect* clip = NULL, nkVec4 color = NK_V4_WHITE);
-GLOBAL void imm_texture_ex        (Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip = NULL, nkVec4 color = NK_V4_WHITE);
-GLOBAL void imm_texture_batched   (             nkF32 x, nkF32 y,                                                  const ImmRect* clip = NULL, nkVec4 color = NK_V4_WHITE);
-GLOBAL void imm_texture_batched_ex(             nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip = NULL, nkVec4 color = NK_V4_WHITE);
+GLOBAL void imm_texture           (Texture tex, nkF32 x, nkF32 y,                                                  const ImmClip* clip = NULL, nkVec4 color = NK_V4_WHITE);
+GLOBAL void imm_texture_ex        (Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmClip* clip = NULL, nkVec4 color = NK_V4_WHITE);
+GLOBAL void imm_texture_batched   (             nkF32 x, nkF32 y,                                                  const ImmClip* clip = NULL, nkVec4 color = NK_V4_WHITE);
+GLOBAL void imm_texture_batched_ex(             nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmClip* clip = NULL, nkVec4 color = NK_V4_WHITE);
 
 /*////////////////////////////////////////////////////////////////////////////*/
 

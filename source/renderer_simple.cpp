@@ -563,16 +563,16 @@ GLOBAL nkVec2 get_texture_size(Texture texture)
     return texture->size;
 }
 
-GLOBAL nkF32 get_texture_width(Texture texture)
+GLOBAL nkS32 get_texture_width(Texture texture)
 {
     NK_ASSERT(texture);
-    return texture->size.x;
+    return NK_CAST(nkS32, texture->size.x);
 }
 
-GLOBAL nkF32 get_texture_height(Texture texture)
+GLOBAL nkS32 get_texture_height(Texture texture)
 {
     NK_ASSERT(texture);
-    return texture->size.y;
+    return NK_CAST(nkS32, texture->size.y);
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/
@@ -769,10 +769,10 @@ GLOBAL void imm_end_texture_batch(void)
     imm_end();
 }
 
-GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 color)
+GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmClip* clip, nkVec4 color)
 {
-    nkF32 w = get_texture_width(tex);
-    nkF32 h = get_texture_height(tex);
+    nkF32 w = NK_CAST(nkF32, get_texture_width(tex));
+    nkF32 h = NK_CAST(nkF32, get_texture_height(tex));
 
     nkF32 s1 = 0;
     nkF32 t1 = 0;
@@ -805,10 +805,10 @@ GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmRect* clip, nkVe
     imm_end();
 }
 
-GLOBAL void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip, nkVec4 color)
+GLOBAL void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmClip* clip, nkVec4 color)
 {
-    nkF32 w = get_texture_width(tex);
-    nkF32 h = get_texture_height(tex);
+    nkF32 w = NK_CAST(nkF32, get_texture_width(tex));
+    nkF32 h = NK_CAST(nkF32, get_texture_height(tex));
 
     nkF32 s1 = 0;
     nkF32 t1 = 0;
@@ -861,12 +861,12 @@ GLOBAL void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nk
     imm_set_model(cached_matrix);
 }
 
-GLOBAL void imm_texture_batched(nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 color)
+GLOBAL void imm_texture_batched(nkF32 x, nkF32 y, const ImmClip* clip, nkVec4 color)
 {
     NK_ASSERT(g_imm.bound_texture);
 
-    nkF32 w = get_texture_width(g_imm.bound_texture);
-    nkF32 h = get_texture_height(g_imm.bound_texture);
+    nkF32 w = NK_CAST(nkF32, get_texture_width(g_imm.bound_texture));
+    nkF32 h = NK_CAST(nkF32, get_texture_height(g_imm.bound_texture));
 
     nkF32 s1 = 0;
     nkF32 t1 = 0;
@@ -899,12 +899,12 @@ GLOBAL void imm_texture_batched(nkF32 x, nkF32 y, const ImmRect* clip, nkVec4 co
     imm_vertex({ { x1,y2 }, { s1,t2 }, color }); // BL
 }
 
-GLOBAL void imm_texture_batched_ex(nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmRect* clip, nkVec4 color)
+GLOBAL void imm_texture_batched_ex(nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmClip* clip, nkVec4 color)
 {
     NK_ASSERT(g_imm.bound_texture);
 
-    nkF32 w = get_texture_width(g_imm.bound_texture);
-    nkF32 h = get_texture_height(g_imm.bound_texture);
+    nkF32 w = NK_CAST(nkF32, get_texture_width(g_imm.bound_texture));
+    nkF32 h = NK_CAST(nkF32, get_texture_height(g_imm.bound_texture));
 
     nkF32 s1 = 0;
     nkF32 t1 = 0;
