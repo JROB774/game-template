@@ -34,6 +34,7 @@
 #include "asset_manager.hpp"
 #include "audio.hpp"
 #include "input.hpp"
+#include "bitmap_font.hpp"
 #include "truetype_font.hpp"
 #include "renderer.hpp"
 
@@ -42,6 +43,7 @@
 #include "asset_manager.cpp"
 #include "audio.cpp"
 #include "input.cpp"
+#include "bitmap_font.cpp"
 #include "truetype_font.cpp"
 #include "renderer.cpp"
 
