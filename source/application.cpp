@@ -36,6 +36,7 @@
 #include "input.hpp"
 #include "bitmap_font.hpp"
 #include "truetype_font.hpp"
+#include "animation.hpp"
 #include "renderer.hpp"
 
 #include "utility.cpp"
@@ -45,6 +46,7 @@
 #include "input.cpp"
 #include "bitmap_font.cpp"
 #include "truetype_font.cpp"
+#include "animation.cpp"
 #include "renderer.cpp"
 
 GLOBAL void app_main(AppDesc* desc)
