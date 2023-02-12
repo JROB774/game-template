@@ -620,7 +620,7 @@ INTERNAL ImmContext g_imm;
 
 GLOBAL void imm_init(void)
 {
-    g_imm.shader = asset_manager_load<Shader>("basic.shader");
+    g_imm.shader = asset_manager_load<Shader>("simple_basic.shader");
     g_imm.buffer = create_vertex_buffer();
     set_vertex_buffer_stride   (g_imm.buffer, sizeof(ImmVertex));
     enable_vertex_buffer_attrib(g_imm.buffer, 0, AttribType_Float, 2, offsetof(ImmVertex, pos));
