@@ -51,8 +51,11 @@ INTERNAL void bake_font_glyph(TrueTypeFont font, nkS32 size, wchar_t codepoint)
 
     FT_Error error;
 
+    nkBool mono = NK_CHECK_FLAGS(font->flags, TrueTypeFontFlags_Monochrome);
+
     FT_UInt index = FT_Get_Char_Index(font->font_face, codepoint);
-    error = FT_Load_Glyph(font->font_face, index, FT_LOAD_RENDER);
+    FT_Int32 load_flags = ((mono) ? FT_LOAD_RENDER|FT_LOAD_TARGET_MONO : FT_LOAD_RENDER);
+    error = FT_Load_Glyph(font->font_face, index, load_flags);
     if(error != 0) fatal_error("Failed to load font glyph! (%d)", error);
 
     FT_GlyphSlot slot = font->font_face->glyph;
@@ -87,9 +90,31 @@ INTERNAL void bake_font_glyph(TrueTypeFont font, nkS32 size, wchar_t codepoint)
 
     for(FT_UInt y=0; y<glyph.bounds.h; ++y)
     {
-        void* dst = font->atlas_pixels + NK_CAST(nkS32, (((glyph.bounds.y+y) * FONT_ATLAS_SIZE + glyph.bounds.x)));
-        void* src = bitmap->buffer + (y * bitmap->pitch);
-        memcpy(dst, src, bitmap->pitch);
+        nkU8* dst = font->atlas_pixels + NK_CAST(nkS32, (((glyph.bounds.y+y) * FONT_ATLAS_SIZE + glyph.bounds.x)));
+        nkU8* src = bitmap->buffer + (y * bitmap->pitch);
+
+        if(!mono)
+        {
+            memcpy(dst, src, bitmap->pitch);
+        }
+        else
+        {
+            // When rendering in monochrome, FreeType packs 8 pixels into a single byte.
+            // So, we need to unpack the pixels into our single channel pixel format.
+            for(FT_Int x=0; x<bitmap->pitch; ++x)
+            {
+                nkU8 packed_pixels = src[x];
+
+                dst[(x*8)+7] = ((packed_pixels & 0x01) >> 0) * 0xFF;
+                dst[(x*8)+6] = ((packed_pixels & 0x02) >> 1) * 0xFF;
+                dst[(x*8)+5] = ((packed_pixels & 0x04) >> 2) * 0xFF;
+                dst[(x*8)+4] = ((packed_pixels & 0x08) >> 3) * 0xFF;
+                dst[(x*8)+3] = ((packed_pixels & 0x10) >> 4) * 0xFF;
+                dst[(x*8)+2] = ((packed_pixels & 0x20) >> 5) * 0xFF;
+                dst[(x*8)+1] = ((packed_pixels & 0x40) >> 6) * 0xFF;
+                dst[(x*8)+0] = ((packed_pixels & 0x80) >> 7) * 0xFF;
+            }
+        }
     }
 
     font->atlas_cursor.x += glyph.bounds.w + x_padding;
@@ -132,6 +157,34 @@ INTERNAL void bake_font_at_size(TrueTypeFont font, nkS32 size)
             bake_font_glyph(font, size, codepoint);
         }
     }
+}
+
+INTERNAL nkF32 get_truetype_line_width(TrueTypeFont font, const wchar_t* text)
+{
+    NK_ASSERT(font);
+    NK_ASSERT(text);
+
+    if(!text) return 0.0f;
+
+    nkF32 line_width = 0.0f;
+    nkU64 length = wcslen(text);
+
+    for(nkU64 i=0; i<length; ++i)
+    {
+        if(text[i] == L'\n')
+        {
+            break;
+        }
+        else
+        {
+            Glyph glyph = get_glyph(font, text[i]);
+            nkF32 advance = glyph.info.advance;
+            nkF32 kerning = get_kerning(font, text[i], text[i+1]);
+            line_width += advance + kerning;
+        }
+    }
+
+    return line_width;
 }
 
 GLOBAL void init_truetype_font_system(void)
@@ -293,7 +346,11 @@ GLOBAL Glyph get_glyph(TrueTypeFont font, wchar_t codepoint)
 {
     NK_ASSERT(font);
 
-    GlyphID glyph_id = { font->current_size, codepoint };
+    GlyphID glyph_id = NK_ZERO_MEM; // NOTE: The zeroing of the memory is important here or else bytes used in hashing could be random!!!
+                                    //       We should probably just implement a custom hashing function for the GlyphID function instead...
+    glyph_id.px_size = font->current_size;
+    glyph_id.codepoint = codepoint;
+
     if(nk_hashmap_contains(&font->glyphs, glyph_id))
     {
         return nk_hashmap_getref(&font->glyphs, glyph_id);

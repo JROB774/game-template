@@ -59,6 +59,9 @@ GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h);
 
 GLOBAL void set_blend_mode(BlendMode blend_mode);
 
+GLOBAL void begin_scissor(nkF32 x, nkF32 y, nkF32 w, nkF32 h);
+GLOBAL void end_scissor  (void);
+
 GLOBAL void clear_screen(nkVec4 color);
 GLOBAL void clear_screen(nkVec3 color);
 GLOBAL void clear_screen(nkF32 r, nkF32 g, nkF32 b, nkF32 a = 1.0f);
@@ -124,6 +127,8 @@ GLOBAL void imm_set_view      (nkMat4 view);
 GLOBAL void imm_set_model     (nkMat4 model);
 
 GLOBAL void imm_set_viewport(nkVec4 viewport);
+
+GLOBAL void imm_reset(void);
 
 GLOBAL void imm_begin (DrawMode draw_mode, Texture tex, Shader shader);
 GLOBAL void imm_end   (void);

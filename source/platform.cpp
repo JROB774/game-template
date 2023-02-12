@@ -39,6 +39,7 @@ struct PlatformContext
     nkS32         window_h;
     nkBool        maximized;
     nkBool        fullscreen;
+    nkU64         ticks;
 };
 
 INTERNAL PlatformContext g_ctx;
@@ -190,6 +191,7 @@ INTERNAL void main_init(void)
 
     init_render_system();
     init_audio_system();
+    init_asset_manager();
     init_truetype_font_system();
     init_input_system();
 
@@ -197,19 +199,16 @@ INTERNAL void main_init(void)
 
     app_init();
 
-    load_program_state();
-
     g_ctx.running = NK_TRUE;
 }
 
 INTERNAL void main_quit(void)
 {
-    save_program_state();
-
     app_quit();
 
     imm_quit();
 
+    quit_asset_manager();
     quit_input_system();
     quit_truetype_font_system();
     quit_audio_system();
@@ -239,6 +238,9 @@ INTERNAL void main_loop(void)
         last_counter = SDL_GetPerformanceCounter();
     }
 
+    // Just confirm our fullscreen state is accurate.
+    g_ctx.fullscreen = NK_CHECK_FLAGS(SDL_GetWindowFlags(g_ctx.window), SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN);
+
     SDL_Event event;
     while(SDL_PollEvent(&event))
     {
@@ -267,6 +269,7 @@ INTERNAL void main_loop(void)
             } break;
             case(SDL_QUIT):
             {
+                stop_music(); // Music can cause some blocking scenarios if not stopped, so just make sure it is before quitting.
                 g_ctx.running = NK_FALSE;
             } break;
         }
@@ -277,6 +280,7 @@ INTERNAL void main_loop(void)
         update_input_state();
         app_tick(dt);
         reset_input_state();
+        g_ctx.ticks++;
         update_timer -= dt;
     }
 
@@ -468,6 +472,11 @@ GLOBAL nkU64 get_system_time_us()
     nkF64 us = tick * ((1.0 / (freq / 1000.0)) * 1000.0);
 
     return NK_CAST(nkU64, us);
+}
+
+GLOBAL nkU64 get_elapsed_ticks(void)
+{
+    return g_ctx.ticks;
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/

@@ -56,7 +56,7 @@ GLOBAL NKFORCEINLINE void stack_clear(Stack<T,N>* stack)
 GLOBAL wchar_t* convert_string_to_wide(const nkChar* str)
 {
     nkU64 length = strlen(str);
-    wchar_t* wstr = NK_MALLOC_TYPES(wchar_t, (length*2)+1);
+    wchar_t* wstr = NK_MALLOC_TYPES(wchar_t, ((length+1)*4));
     if(!wstr) return NULL;
     mbstowcs(wstr, str, length);
     wstr[length] = L'\0';
@@ -120,6 +120,48 @@ GLOBAL nkString potentially_append_slash(const nkChar* file_path)
 GLOBAL NKFORCEINLINE nkBool point_vs_rect(nkF32 px, nkF32 py, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh)
 {
     return ((px >= rx) && (px < (rx+rw)) && (py >= ry) && (py < (ry+rh)));
+}
+
+GLOBAL NKFORCEINLINE nkBool point_vs_rect(const nkVec2& p, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh)
+{
+    return point_vs_rect(p.x, p.y, rx, ry, rw, rh);
+}
+
+GLOBAL NKFORCEINLINE nkBool point_vs_circle(nkF32 px, nkF32 py, nkF32 cx, nkF32 cy, nkF32 cr)
+{
+    return (distance_between_points({ px,py }, { cx,cy }) < cr);
+}
+
+GLOBAL NKFORCEINLINE nkBool point_vs_circle(const nkVec2& p, nkF32 cx, nkF32 cy, nkF32 cr)
+{
+    return point_vs_circle(p.x, p.y, cx, cy, cr);
+}
+
+GLOBAL NKFORCEINLINE nkBool rect_vs_rect(const fRect& r1, const fRect& r2)
+{
+    return ((r1.x < r2.x + r2.w) && (r1.x + r1.w > r2.x) && (r1.y < r2.y + r2.h) && (r1.y + r1.h > r2.y));
+}
+
+GLOBAL NKFORCEINLINE nkBool rect_vs_circle(const fRect& r, nkF32 cx, nkF32 cy, nkF32 cr)
+{
+    nkVec2 nearest;
+    nkVec2 ray;
+
+    nearest.x = nk_max(r.x, nk_min(cx, r.x+r.w));
+    nearest.y = nk_max(r.y, nk_min(cy, r.y+r.h));
+
+    ray.x = nearest.x - cx;
+    ray.y = nearest.y - cy;
+
+    nkF32 overlap = cr - nk_length(ray);
+    if(isnan(overlap))
+        overlap = 0.0f;
+    return (overlap > 0.0f);
+}
+
+GLOBAL NKFORCEINLINE nkBool circle_vs_circle(nkF32 ax, nkF32 ay, nkF32 ar, nkF32 bx, nkF32 by, nkF32 br)
+{
+    return (nk_length(nkVec2{ ax-bx, ay-by }) < (ar + br));
 }
 
 //
@@ -306,6 +348,28 @@ GLOBAL nkVec4 str_get_vec4(nkChar** str)
     v.z = str_get_f32(str);
     v.w = str_get_f32(str);
     return v;
+}
+
+//
+// Miscellaneous.
+//
+
+INTERNAL NKFORCEINLINE nkF32 distance_between_points(const nkVec2& a, const nkVec2& b)
+{
+    nkF32 dx = a.x - b.x;
+    nkF32 dy = a.y - b.y;
+
+    return fabsf(sqrtf(dx * dx + dy * dy));
+}
+
+INTERNAL NKFORCEINLINE nkF32 ease_out_elastic(nkF32 t)
+{
+    nkF32 c4 = (2.0f * NK_PI_F32) / 3.0f;
+
+    if(t <= 0.0f) return 0.0f;
+    if(t >= 1.0f) return 1.0f;
+
+    return powf(2, -10 * t) * sinf((t * 10 - 0.75f) * c4) + 1.0f;
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/

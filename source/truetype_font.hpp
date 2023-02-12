@@ -5,7 +5,8 @@ DECLARE_PRIVATE_TYPE(TrueTypeFont);
 NK_ENUM(TrueTypeFontFlags, nkU32)
 {
     TrueTypeFontFlags_None       = (   0),
-    TrueTypeFontFlags_HasKerning = (1<<0), // Whether the font has kerning data or not (automatically assigned on font creation).
+    TrueTypeFontFlags_Monochrome = (1<<0), // Rasterize the font with monochrome output (no anti-aliasing).
+    TrueTypeFontFlags_HasKerning = (1<<1), // Whether the font has kerning data or not (automatically assigned on font creation).
 };
 
 struct GlyphInfo

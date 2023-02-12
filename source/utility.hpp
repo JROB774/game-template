@@ -6,7 +6,7 @@
 
 #define DECLARE_PRIVATE_TYPE(name) struct name##__Type; typedef struct name##__Type* name;
 #define DEFINE_PRIVATE_TYPE(name) struct name##__Type
-#define ALLOCATE_PRIVATE_TYPE(name) NK_MALLOC_TYPES(name##__Type, 1)
+#define ALLOCATE_PRIVATE_TYPE(name) NK_CALLOC_TYPES(name##__Type, 1)
 
 template<typename T>
 struct Point
@@ -50,7 +50,13 @@ GLOBAL void     potentially_append_slash(nkChar* file_path, nkU64 size);
 GLOBAL nkString potentially_append_slash(const nkChar* file_path);
 
 // Collision.
-GLOBAL NKFORCEINLINE nkBool point_vs_rect(nkF32 px, nkF32 py, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh);
+GLOBAL NKFORCEINLINE nkBool point_vs_rect   (nkF32 px, nkF32 py, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh);
+GLOBAL NKFORCEINLINE nkBool point_vs_rect   (const nkVec2& p, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh);
+GLOBAL NKFORCEINLINE nkBool point_vs_circle (nkF32 px, nkF32 py, nkF32 cx, nkF32 cy, nkF32 cr);
+GLOBAL NKFORCEINLINE nkBool point_vs_circle (const nkVec2& p, nkF32 cx, nkF32 cy, nkF32 cr);
+GLOBAL NKFORCEINLINE nkBool rect_vs_rect    (const fRect& r1, const fRect& r2);
+GLOBAL NKFORCEINLINE nkBool rect_vs_cirlce  (const fRect& r, nkF32 cx, nkF32 cy, nkF32 cr);
+GLOBAL NKFORCEINLINE nkBool circle_vs_circle(nkF32 ax, nkF32 ay, nkF32 ar, nkF32 bx, nkF32 by, nkF32 br);
 
 // Random number generation.
 GLOBAL void   rng_seed(nkU32 seed);
@@ -75,5 +81,9 @@ GLOBAL nkF32   str_get_f32  (nkChar** str);
 GLOBAL nkVec2  str_get_vec2 (nkChar** str);
 GLOBAL nkVec3  str_get_vec3 (nkChar** str);
 GLOBAL nkVec4  str_get_vec4 (nkChar** str);
+
+// Miscellaneous
+INTERNAL NKFORCEINLINE nkF32 distance_between_points(const nkVec2& a, const nkVec2& b);
+INTERNAL NKFORCEINLINE nkF32 ease_out_elastic       (nkF32 t);
 
 /*////////////////////////////////////////////////////////////////////////////*/

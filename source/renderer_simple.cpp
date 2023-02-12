@@ -80,7 +80,7 @@ GLOBAL void setup_renderer_platform(void)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     #endif // BUILD_NATIVE
     #if defined(BUILD_WEB)
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     #endif // BUILD_WEB
@@ -122,6 +122,22 @@ GLOBAL void set_blend_mode(BlendMode blend_mode)
             glEnable(GL_BLEND);
         } break;
     }
+}
+
+GLOBAL void begin_scissor(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
+{
+    GLint   sx = NK_CAST(GLint,   x);
+    GLint   sy = NK_CAST(GLint,   get_window_height()-(y+h));
+    GLsizei sw = NK_CAST(GLsizei, w);
+    GLsizei sh = NK_CAST(GLsizei, h);
+
+    glScissor(sx,sy,sw,sh);
+    glEnable(GL_SCISSOR_TEST);
+}
+
+GLOBAL void end_scissor(void)
+{
+    glDisable(GL_SCISSOR_TEST);
 }
 
 GLOBAL void clear_screen(nkVec4 color)
@@ -311,8 +327,8 @@ INTERNAL GLuint compile_shader(const nkChar* source, nkU64 bytes, GLenum type)
     if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 330\n#define FRAG_SHADER 1\n";
     #endif // BUILD_NATIVE
     #if defined(BUILD_WEB)
-    if(type == GL_VERTEX_SHADER) sources[0] = "#version 200 es\n#define VERT_SHADER 1\nprecision mediump float;\n";
-    if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 200 es\n#define FRAG_SHADER 1\nprecision mediump float;\n";
+    if(type == GL_VERTEX_SHADER) sources[0] = "#version 300 es\n#define VERT_SHADER 1\nprecision mediump float;\n";
+    if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 300 es\n#define FRAG_SHADER 1\nprecision mediump float;\n";
     #endif // BUILD_WEB
 
     GLuint shader = glCreateShader(type);
@@ -585,27 +601,26 @@ GLOBAL nkS32 get_texture_height(Texture texture)
 /*////////////////////////////////////////////////////////////////////////////*/
 /*////////////////////////////////////////////////////////////////////////////*/
 
-INTERNAL constexpr nkU32 IMM_MAX_VERTS =  16384;
+INTERNAL constexpr nkU32 IMM_INITIAL_VERTS = 16384;
 
 struct ImmContext
 {
-    DrawMode     draw_mode;
-    VertexBuffer buffer;
-    Shader       shader;
-    Shader       bound_shader;
-    Texture      bound_texture;
-    nkMat4       projection;
-    nkMat4       view;
-    nkMat4       model;
-    ImmVertex    verts[IMM_MAX_VERTS];
-    nkU64        vert_count;
+    DrawMode           draw_mode;
+    VertexBuffer       buffer;
+    Shader             shader;
+    Shader             bound_shader;
+    Texture            bound_texture;
+    nkMat4             projection;
+    nkMat4             view;
+    nkMat4             model;
+    nkArray<ImmVertex> vertices;
 };
 
 INTERNAL ImmContext g_imm;
 
 GLOBAL void imm_init(void)
 {
-    g_imm.shader = asset_manager_load<Shader>("simple_basic.shader");
+    g_imm.shader = asset_manager_load<Shader>("basic.shader");
     g_imm.buffer = create_vertex_buffer();
     set_vertex_buffer_stride   (g_imm.buffer, sizeof(ImmVertex));
     enable_vertex_buffer_attrib(g_imm.buffer, 0, AttribType_Float, 2, offsetof(ImmVertex, pos));
@@ -615,10 +630,13 @@ GLOBAL void imm_init(void)
     g_imm.projection = nk_m4_identity();
     g_imm.view       = nk_m4_identity();
     g_imm.model      = nk_m4_identity();
+
+    nk_array_reserve(&g_imm.vertices, IMM_INITIAL_VERTS);
 }
 
 GLOBAL void imm_quit(void)
 {
+    nk_array_free(&g_imm.vertices);
     free_vertex_buffer(g_imm.buffer);
 }
 
@@ -657,12 +675,20 @@ GLOBAL void imm_set_viewport(nkVec4 viewport)
     set_viewport(viewport.x,viewport.y,viewport.z,viewport.w);
 }
 
+GLOBAL void imm_reset(void)
+{
+    g_imm.projection = nk_m4_identity();
+    g_imm.view = nk_m4_identity();
+    g_imm.model = nk_m4_identity();
+}
+
 GLOBAL void imm_begin(DrawMode draw_mode, Texture tex, Shader shader)
 {
     g_imm.draw_mode = draw_mode;
     g_imm.bound_texture = tex;
     g_imm.bound_shader = shader;
-    g_imm.vert_count = 0;
+
+    nk_array_clear(&g_imm.vertices);
 
     if(!g_imm.bound_shader)
     {
@@ -680,14 +706,13 @@ GLOBAL void imm_end(void)
     set_shader_mat4(g_imm.bound_shader, "u_view",       g_imm.view);
     set_shader_mat4(g_imm.bound_shader, "u_model",      g_imm.model);
 
-    update_vertex_buffer(g_imm.buffer, g_imm.verts, g_imm.vert_count * sizeof(ImmVertex), BufferType_Dynamic);
-    draw_vertex_buffer(g_imm.buffer, g_imm.draw_mode, g_imm.vert_count);
+    update_vertex_buffer(g_imm.buffer, g_imm.vertices.data, g_imm.vertices.length * sizeof(ImmVertex), BufferType_Dynamic);
+    draw_vertex_buffer(g_imm.buffer, g_imm.draw_mode, g_imm.vertices.length);
 }
 
 GLOBAL void imm_vertex(ImmVertex v)
 {
-    NK_ASSERT(g_imm.vert_count < IMM_MAX_VERTS);
-    g_imm.verts[g_imm.vert_count++] = v;
+    nk_array_append(&g_imm.vertices, v);
 }
 
 GLOBAL void imm_point(nkF32 x, nkF32 y, nkVec4 color)
@@ -787,16 +812,21 @@ GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmClip* clip, nkVe
 
     if(clip)
     {
-        s1 = clip->x;
-        t1 = clip->y;
-        s2 = s1+clip->w;
-        t2 = t1+clip->h;
+        s1 = (clip->x   );
+        t1 = (clip->y   );
+        s2 = (s1+clip->w);
+        t2 = (t1+clip->h);
     }
 
     nkF32 x1 = x-((s2-s1)*0.5f);
     nkF32 y1 = y-((t2-t1)*0.5f);
     nkF32 x2 = x1+(s2-s1);
     nkF32 y2 = y1+(t2-t1);
+
+    s1 += 0.5f;
+    t1 += 0.5f;
+    s2 -= 0.5f;
+    t2 -= 0.5f;
 
     s1 /= w;
     t1 /= h;
@@ -842,6 +872,11 @@ GLOBAL void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nk
     nkF32 y1 = 0.0f;
     nkF32 x2 = (s2-s1);
     nkF32 y2 = (t2-t1);
+
+    s1 += 0.5f;
+    t1 += 0.5f;
+    s2 -= 0.5f;
+    t2 -= 0.5f;
 
     s1 /= w;
     t1 /= h;
@@ -892,6 +927,11 @@ GLOBAL void imm_texture_batched(nkF32 x, nkF32 y, const ImmClip* clip, nkVec4 co
     nkF32 x2 = x1+(s2-s1);
     nkF32 y2 = y1+(t2-t1);
 
+    s1 += 0.5f;
+    t1 += 0.5f;
+    s2 -= 0.5f;
+    t2 -= 0.5f;
+
     s1 /= w;
     t1 /= h;
     s2 /= w;
@@ -938,6 +978,11 @@ GLOBAL void imm_texture_batched_ex(nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 a
     nkF32 y1 = 0.0f;
     nkF32 x2 = (s2-s1);
     nkF32 y2 = (t2-t1);
+
+    s1 += 0.5f;
+    t1 += 0.5f;
+    s2 -= 0.5f;
+    t2 -= 0.5f;
 
     s1 /= w;
     t1 /= h;
