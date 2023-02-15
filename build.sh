@@ -4,9 +4,9 @@ if [ "${args[0]}" == "osx" ]; then
     echo "----------------------------------------"
 
     defs="-D BUILD_NATIVE"
-    idir="-I ../../depends/sdl/osx/SDL2.framework/Headers -I ../../depends/sdl_mixer/osx/SDL2_mixer.framework/Headers -I ../../depends/nksdk/nklibs -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb"
-    ldir="-F ../../depends/sdl/osx -F ../../depends/sdl_mixer/osx"
-    libs="-framework OpenGL -framework SDL2 -framework SDL2_mixer"
+    idir="-I ../../depends/sdl/osx/SDL2.framework/Headers -I ../../depends/sdl_mixer/osx/SDL2_mixer.framework/Headers -I ../../depends/freetype/osx/include -I ../../depends/nksdk/nklibs -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb"
+    ldir="-F ../../depends/sdl/osx -F ../../depends/sdl_mixer/osx -L ../../depends/freetype/osx/lib"
+    libs="-framework OpenGL -framework SDL2 -framework SDL2_mixer -lz -lbz2 -lfreetype"
     cflg="-std=c++14 -rpath @executable_path/Frameworks -g" # @Incomplete: Always generating symbols right now...
     lflg=""
 
