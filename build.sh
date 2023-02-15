@@ -1,20 +1,20 @@
 args=("$@")
 
-if [ "${args[0]}" == "osx" ]; then
+if [ "${args[0]}" == "macos" ]; then
     echo "----------------------------------------"
 
     defs="-D BUILD_NATIVE"
-    idir="-I ../../depends/sdl/osx/SDL2.framework/Headers -I ../../depends/sdl_mixer/osx/SDL2_mixer.framework/Headers -I ../../depends/freetype/osx/include -I ../../depends/nksdk/nklibs -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb"
-    ldir="-F ../../depends/sdl/osx -F ../../depends/sdl_mixer/osx -L ../../depends/freetype/osx/lib"
+    idir="-I ../../depends/sdl/macos/SDL2.framework/Headers -I ../../depends/sdl_mixer/macos/SDL2_mixer.framework/Headers -I ../../depends/freetype/macos/include -I ../../depends/nksdk/nklibs -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb"
+    ldir="-F ../../depends/sdl/macos -F ../../depends/sdl_mixer/macos -L ../../depends/freetype/macos/lib"
     libs="-framework OpenGL -framework SDL2 -framework SDL2_mixer -lz -lbz2 -lfreetype"
     cflg="-std=c++14 -rpath @executable_path/Frameworks -g" # @Incomplete: Always generating symbols right now...
     lflg=""
 
-    if [ ! -d "binary/osx" ];
-        then mkdir -p "binary/osx"
+    if [ ! -d "binary/macos" ];
+        then mkdir -p "binary/macos"
     fi
 
-    cd "binary/osx"
+    cd "binary/macos"
     g++ $cflg $idir $ldir $libs $lflg $defs ../../source/application.cpp -o game
 
     # Build the .app package manually.
@@ -31,8 +31,8 @@ if [ "${args[0]}" == "osx" ]; then
 
     mv game game.app/Contents/MacOS/game
     mv game.dSYM game.app.dSYM
-    cp -r ../../depends/sdl/osx/SDL2.framework game.app/Contents/MacOS/Frameworks
-    cp -r ../../depends/sdl_mixer/osx/SDL2_mixer.framework game.app/Contents/MacOS/Frameworks
+    cp -r ../../depends/sdl/macos/SDL2.framework game.app/Contents/MacOS/Frameworks
+    cp -r ../../depends/sdl_mixer/macos/SDL2_mixer.framework game.app/Contents/MacOS/Frameworks
     cp -r ../../assets game.app/Contents/Resources/assets
 
     echo "----------------------------------------"
@@ -80,4 +80,4 @@ if [ "${args[0]}" == "tools" ]; then
     exit 0
 fi
 
-echo "please specify build target (osx, web, tools)..."
+echo "please specify build target (macos, web, tools)..."
