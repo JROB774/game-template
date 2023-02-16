@@ -8,22 +8,14 @@
 #define DEFINE_PRIVATE_TYPE(name) struct name##__Type
 #define ALLOCATE_PRIVATE_TYPE(name) NK_CALLOC_TYPES(name##__Type, 1)
 
-template<typename T>
-struct Point
-{
-    T x,y;
-};
-
-template<typename T>
-struct Rect
-{
-    T x,y,w,h;
-};
-
-typedef Point<nkS32> iPoint;
-typedef Rect <nkS32> iRect;
-typedef Point<nkF32> fPoint;
-typedef Rect <nkF32> fRect;
+struct iPoint  { nkS32 x,y;         };
+struct fPoint  { nkF32 x,y;         };
+struct iLine   { nkS32 x1,y1,x2,y2; };
+struct fLine   { nkF32 x1,y1,x2,y2; };
+struct iCircle { nkS32 x,y,r;       };
+struct fCircle { nkF32 x,y,r;       };
+struct iRect   { nkS32 x,y,w,h;     };
+struct fRect   { nkF32 x,y,w,h;     };
 
 // Stack data structure.
 template<typename T, nkU32 N>
@@ -48,15 +40,6 @@ GLOBAL nkString format_string_v       (const nkChar* fmt, va_list args);
 // File name/path helpers.
 GLOBAL void     potentially_append_slash(nkChar* file_path, nkU64 size);
 GLOBAL nkString potentially_append_slash(const nkChar* file_path);
-
-// Collision.
-GLOBAL NKFORCEINLINE nkBool point_vs_rect   (nkF32 px, nkF32 py, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh);
-GLOBAL NKFORCEINLINE nkBool point_vs_rect   (const nkVec2& p, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh);
-GLOBAL NKFORCEINLINE nkBool point_vs_circle (nkF32 px, nkF32 py, nkF32 cx, nkF32 cy, nkF32 cr);
-GLOBAL NKFORCEINLINE nkBool point_vs_circle (const nkVec2& p, nkF32 cx, nkF32 cy, nkF32 cr);
-GLOBAL NKFORCEINLINE nkBool rect_vs_rect    (const fRect& r1, const fRect& r2);
-GLOBAL NKFORCEINLINE nkBool rect_vs_cirlce  (const fRect& r, nkF32 cx, nkF32 cy, nkF32 cr);
-GLOBAL NKFORCEINLINE nkBool circle_vs_circle(nkF32 ax, nkF32 ay, nkF32 ar, nkF32 bx, nkF32 by, nkF32 br);
 
 // Random number generation.
 GLOBAL void   rng_seed(nkU32 seed);

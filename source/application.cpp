@@ -30,6 +30,7 @@
 #include <stb_image.h>
 
 #include "utility.hpp"
+#include "collision.hpp"
 #include "application.hpp"
 #include "platform.hpp"
 #include "asset_manager.hpp"
@@ -41,6 +42,7 @@
 #include "renderer.hpp"
 
 #include "utility.cpp"
+#include "collision.cpp"
 #include "platform.cpp"
 #include "asset_manager.cpp"
 #include "audio.cpp"

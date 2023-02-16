@@ -123,57 +123,6 @@ GLOBAL nkString potentially_append_slash(const nkChar* file_path)
 }
 
 //
-// Collision.
-//
-
-GLOBAL NKFORCEINLINE nkBool point_vs_rect(nkF32 px, nkF32 py, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh)
-{
-    return ((px >= rx) && (px < (rx+rw)) && (py >= ry) && (py < (ry+rh)));
-}
-
-GLOBAL NKFORCEINLINE nkBool point_vs_rect(const nkVec2& p, nkF32 rx, nkF32 ry, nkF32 rw, nkF32 rh)
-{
-    return point_vs_rect(p.x, p.y, rx, ry, rw, rh);
-}
-
-GLOBAL NKFORCEINLINE nkBool point_vs_circle(nkF32 px, nkF32 py, nkF32 cx, nkF32 cy, nkF32 cr)
-{
-    return (distance_between_points({ px,py }, { cx,cy }) < cr);
-}
-
-GLOBAL NKFORCEINLINE nkBool point_vs_circle(const nkVec2& p, nkF32 cx, nkF32 cy, nkF32 cr)
-{
-    return point_vs_circle(p.x, p.y, cx, cy, cr);
-}
-
-GLOBAL NKFORCEINLINE nkBool rect_vs_rect(const fRect& r1, const fRect& r2)
-{
-    return ((r1.x < r2.x + r2.w) && (r1.x + r1.w > r2.x) && (r1.y < r2.y + r2.h) && (r1.y + r1.h > r2.y));
-}
-
-GLOBAL NKFORCEINLINE nkBool rect_vs_circle(const fRect& r, nkF32 cx, nkF32 cy, nkF32 cr)
-{
-    nkVec2 nearest;
-    nkVec2 ray;
-
-    nearest.x = nk_max(r.x, nk_min(cx, r.x+r.w));
-    nearest.y = nk_max(r.y, nk_min(cy, r.y+r.h));
-
-    ray.x = nearest.x - cx;
-    ray.y = nearest.y - cy;
-
-    nkF32 overlap = cr - nk_length(ray);
-    if(isnan(overlap))
-        overlap = 0.0f;
-    return (overlap > 0.0f);
-}
-
-GLOBAL NKFORCEINLINE nkBool circle_vs_circle(nkF32 ax, nkF32 ay, nkF32 ar, nkF32 bx, nkF32 by, nkF32 br)
-{
-    return (nk_length(nkVec2{ ax-bx, ay-by }) < (ar + br));
-}
-
-//
 // Random number generation.
 //
 
