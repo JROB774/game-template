@@ -101,7 +101,7 @@ GLOBAL void app_draw(void)
 
     nkF32 scale = wh / (get_texture_height(face) + 512.0f);
 
-    clear_screen(0.0f, 0.6f, 0.8f);
+    imm_clear(0.0f, 0.6f, 0.8f);
 
     imm_set_projection(nk_orthographic(0.0f,ww,wh,0.0f));
     imm_set_viewport({ 0.0f,0.0f,ww,wh });
