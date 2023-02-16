@@ -46,37 +46,3 @@ GLOBAL void  stop_music_fade_out   (nkF32 seconds = 5.0f);
 // =============================================================================
 
 /*////////////////////////////////////////////////////////////////////////////*/
-
-template<>
-Sound asset_load<Sound>(void* data, nkU64 size, nkBool from_npak, void* userdata)
-{
-    return create_sound_from_data(data, size);
-}
-template<>
-void asset_free<Sound>(Asset<Sound>& asset)
-{
-    return free_sound(asset.data);
-}
-template<>
-const nkChar* asset_path<Sound>(void)
-{
-    return "sounds/";
-}
-
-template<>
-Music asset_load<Music>(void* data, nkU64 size, nkBool from_npak, void* userdata)
-{
-    return create_music_from_data(data, size);
-}
-template<>
-void asset_free<Music>(Asset<Music>& asset)
-{
-    return free_music(asset.data);
-}
-template<>
-const nkChar* asset_path<Music>(void)
-{
-    return "music/";
-}
-
-/*////////////////////////////////////////////////////////////////////////////*/

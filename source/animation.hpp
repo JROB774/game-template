@@ -38,21 +38,3 @@ GLOBAL nkBool     is_animation_done          (AnimState* state);
 GLOBAL AnimFrame  get_current_animation_frame(AnimState* state);
 
 /*////////////////////////////////////////////////////////////////////////////*/
-
-template<>
-AnimGroup* asset_load<AnimGroup*>(void* data, nkU64 size, nkBool from_npak, void* userdata)
-{
-    return create_animation_group(data, size);
-}
-template<>
-void asset_free<AnimGroup*>(Asset<AnimGroup*>& asset)
-{
-    free_animation_group(asset.data);
-}
-template<>
-const nkChar* asset_path<AnimGroup*>(void)
-{
-    return "textures/";
-}
-
-/*////////////////////////////////////////////////////////////////////////////*/

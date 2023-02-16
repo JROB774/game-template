@@ -38,22 +38,3 @@ Asset<T>::~Asset(void)
 }
 
 /*////////////////////////////////////////////////////////////////////////////*/
-
-template<>
-nkFileContent asset_load<nkFileContent>(void* data, nkU64 size, nkBool from_npak, void* userdata)
-{
-    nkFileContent file_content = { data, size };
-    return file_content;
-}
-template<>
-void asset_free<nkFileContent>(Asset<nkFileContent>& asset)
-{
-    if(!asset.from_npak) nk_free_file_content(&asset.data);
-}
-template<>
-const nkChar* asset_path<nkFileContent>(void)
-{
-    return "defines/";
-}
-
-/*////////////////////////////////////////////////////////////////////////////*/

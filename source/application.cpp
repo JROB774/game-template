@@ -40,6 +40,7 @@
 #include "truetype_font.hpp"
 #include "animation.hpp"
 #include "renderer.hpp"
+#include "assets.hpp"
 
 #include "utility.cpp"
 #include "collision.cpp"
