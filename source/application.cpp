@@ -38,6 +38,7 @@
 #include "truetype_font.hpp"
 #include "animation.hpp"
 #include "renderer.hpp"
+#include "imm.hpp"
 #include "assets.hpp"
 
 #include "utility.cpp"
@@ -49,6 +50,7 @@
 #include "bitmap_font.cpp"
 #include "truetype_font.cpp"
 #include "animation.cpp"
+#include "imm.cpp"
 #include "renderer.cpp"
 
 INTERNAL constexpr nkF32 MIN_FACE_ROTATION = -0.30f;
