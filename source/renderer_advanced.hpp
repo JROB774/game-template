@@ -35,10 +35,26 @@ GLOBAL void   update_buffer(Buffer buffer, void* data, nkU64 bytes);
 // Shader ======================================================================
 DECLARE_PRIVATE_TYPE(Shader);
 
+NK_ENUM(UniformType, nkS32)
+{
+    UniformType_Buffer,
+    UniformType_Texture,
+    UniformType_TOTAL
+};
+
+struct UniformDesc
+{
+    nkString    name;
+    UniformType type = UniformType_Buffer;
+    nkS32       bind = 0;
+};
+
 struct ShaderDesc
 {
-    void* data  = NULL;
-    nkU64 bytes = 0;
+    void*       data          = NULL;
+    nkU64       bytes         = 0;
+    UniformDesc uniforms[32]  = {};
+    nkU64       uniform_count = 0;
 };
 
 GLOBAL Shader create_shader(const ShaderDesc& desc);

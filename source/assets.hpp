@@ -79,8 +79,10 @@ template<>
 Shader asset_load<Shader>(void* data, nkU64 size, nkBool from_npak, void* userdata)
 {
     #if defined(USE_RENDERER_ADVANCED)
-    ShaderDesc sd = { data, size };
-    return create_shader(sd);
+    ShaderDesc desc = (userdata) ? *NK_CAST(ShaderDesc*, userdata) : ShaderDesc();
+    desc.data       = data;
+    desc.bytes      = size;
+    return create_shader(desc);
     #endif // USE_RENDERER_ADVANCED
 
     #if defined(USE_RENDERER_SIMPLE)

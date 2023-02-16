@@ -150,9 +150,18 @@ GLOBAL void update_buffer(Buffer buffer, void* data, nkU64 bytes)
 
 // Shader ======================================================================
 
+struct Uniform
+{
+    nkS32       location;
+    nkS32       binding;
+    UniformType type;
+};
+
 DEFINE_PRIVATE_TYPE(Shader)
 {
-    GLenum program;
+    GLenum  program;
+    Uniform uniforms[32];
+    nkU64   uniform_count;
 };
 
 INTERNAL GLuint compile_shader(void* data, nkU64 bytes, GLenum type)
@@ -222,6 +231,31 @@ GLOBAL Shader create_shader(const ShaderDesc& desc)
             glGetProgramInfoLog(shader->program, info_log_length, NULL, info_log);
             printf("Failed to link shader:\n%s\n", info_log);
             NK_FREE(info_log);
+        }
+    }
+
+    // Build a map of all the shader uniform.
+    if(shader->program)
+    {
+        for(nkU64 i=0; i<desc.uniform_count; ++i)
+        {
+            const UniformDesc& udesc = desc.uniforms[i];
+            Uniform& u = shader->uniforms[i];
+
+            u.type = udesc.type;
+
+            if(udesc.type == UniformType_Buffer)
+            {
+                u.location = glGetUniformBlockIndex(shader->program, udesc.name.cstr);
+                u.binding = udesc.bind;
+            }
+            if(udesc.type == UniformType_Texture)
+            {
+                u.location = glGetUniformLocation(shader->program, udesc.name.cstr);
+                u.binding = udesc.bind;
+            }
+
+            shader->uniform_count++;
         }
     }
 
@@ -545,6 +579,21 @@ GLOBAL void bind_shader(Shader shader)
     NK_ASSERT(shader);
 
     glUseProgram(shader->program);
+
+    // Setup unifrom bindings.
+    for(nkU64 i=0; i<shader->uniform_count; ++i)
+    {
+        const Uniform& u = shader->uniforms[i];
+
+        if(u.type == UniformType_Buffer)
+        {
+            glUniformBlockBinding(shader->program, u.location, u.binding);
+        }
+        if(u.type == UniformType_Texture)
+        {
+            glUniform1i(u.location, u.binding);
+        }
+    }
 }
 
 GLOBAL void bind_texture(Texture texture, Sampler sampler, nkS32 unit)
