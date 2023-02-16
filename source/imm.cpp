@@ -1,6 +1,5 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-INTERNAL constexpr nkU32 IMM_MAX_VERTICES = 16384;
 INTERNAL constexpr nkU32 IMM_MAX_UNIFORMS = 8;
 INTERNAL constexpr nkU32 IMM_MAX_TEXTURES = 16;
 
@@ -32,42 +31,42 @@ struct ImmUniform
 
 struct ImmContext
 {
-    VertexLayout vertex_layout;
-    ImmVertex    vertices[IMM_MAX_VERTICES];
-    Buffer       vertex_buffer;
-    Buffer       uniform_buffers[IMM_MAX_UNIFORMS];
-    RenderPass   render_pass;
+    VertexLayout       vertex_layout;
+    nkArray<ImmVertex> vertices;
+    Buffer             vertex_buffer;
+    Buffer             uniform_buffers[IMM_MAX_UNIFORMS];
+    RenderPass         render_pass;
 
-    Shader       default_shader;
-    Sampler      default_samplers[ImmSampler_TOTAL];
+    Shader             default_shader;
+    Sampler            default_samplers[ImmSampler_TOTAL];
 
-    nkVec4       clear_color = NK_V4_BLACK;
+    nkVec4             clear_color = NK_V4_BLACK;
 
-    DrawMode     current_draw_mode;
-    Texture      current_color_target;
-    Texture      current_depth_target;
-    ImmData      current_uniforms[IMM_MAX_UNIFORMS];
-    Shader       current_shader;
-    Sampler      current_samplers[IMM_MAX_TEXTURES];
-    Texture      current_textures[IMM_MAX_TEXTURES];
-    nkVec4       current_viewport;
-    nkMat4       current_projection;
-    nkMat4       current_view;
-    nkMat4       current_model;
-    nkBool       current_depth_read;
-    nkBool       current_depth_write;
+    DrawMode           current_draw_mode;
+    Texture            current_color_target;
+    Texture            current_depth_target;
+    ImmData            current_uniforms[IMM_MAX_UNIFORMS];
+    Shader             current_shader;
+    Sampler            current_samplers[IMM_MAX_TEXTURES];
+    Texture            current_textures[IMM_MAX_TEXTURES];
+    nkVec4             current_viewport;
+    nkMat4             current_projection;
+    nkMat4             current_view;
+    nkMat4             current_model;
+    nkBool             current_depth_read;
+    nkBool             current_depth_write;
 
-    nkU64        position_count;
-    nkU64        normal_count;
-    nkU64        color_count;
-    nkU64        texcoord_count;
-    nkU64        userdata0_count;
-    nkU64        userdata1_count;
-    nkU64        userdata2_count;
-    nkU64        userdata3_count;
+    nkU64              position_count;
+    nkU64              normal_count;
+    nkU64              color_count;
+    nkU64              texcoord_count;
+    nkU64              userdata0_count;
+    nkU64              userdata1_count;
+    nkU64              userdata2_count;
+    nkU64              userdata3_count;
 
-    nkBool       draw_started;
-    nkBool       pass_needs_rebuild;
+    nkBool             draw_started;
+    nkBool             pass_needs_rebuild;
 };
 
 INTERNAL ImmContext g_imm;
@@ -184,6 +183,8 @@ GLOBAL void imm_reset(void)
     memset(g_imm.current_uniforms, 0, sizeof(g_imm.current_uniforms));
     memset(g_imm.current_samplers, 0, sizeof(g_imm.current_samplers));
     memset(g_imm.current_textures, 0, sizeof(g_imm.current_textures));
+
+    nk_array_clear(&g_imm.vertices);
 
     g_imm.pass_needs_rebuild = NK_TRUE;
 }
@@ -327,6 +328,12 @@ GLOBAL Sampler imm_get_def_sampler(ImmSampler samp)
 
 // Polygon Drawing =============================================================
 
+INTERNAL void imm_grow_vertex_array_if_necessary(nkU64 position)
+{
+    if(g_imm.vertices.length <= position)
+        nk_array_append(&g_imm.vertices, ImmVertex());
+}
+
 GLOBAL void imm_begin(DrawMode draw_mode, nkBool should_clear)
 {
     NK_ASSERT(!g_imm.draw_started); // Cannot start a new draw inside an existing one!
@@ -444,7 +451,7 @@ GLOBAL void imm_end(void)
     }
 
     // Update data and draw.
-    update_buffer(g_imm.vertex_buffer, g_imm.vertices, g_imm.position_count * sizeof(ImmVertex));
+    update_buffer(g_imm.vertex_buffer, g_imm.vertices.data, g_imm.position_count * sizeof(ImmVertex));
 
     draw_arrays(g_imm.vertex_layout, g_imm.position_count);
 
@@ -456,48 +463,56 @@ GLOBAL void imm_end(void)
 GLOBAL void imm_position(nkF32 x, nkF32 y, nkF32 z, nkF32 w)
 {
     NK_ASSERT(g_imm.draw_started); // Attempting to add draw data before calling imm_begin!
+    imm_grow_vertex_array_if_necessary(g_imm.position_count+1);
     g_imm.vertices[g_imm.position_count++].position = { x,y,z,w };
 }
 
 GLOBAL void imm_normal(nkF32 x, nkF32 y, nkF32 z, nkF32 w)
 {
     NK_ASSERT(g_imm.draw_started); // Attempting to add draw data before calling imm_begin!
+    imm_grow_vertex_array_if_necessary(g_imm.normal_count+1);
     g_imm.vertices[g_imm.normal_count++].normal = { x,y,z,w };
 }
 
 GLOBAL void imm_color(nkF32 x, nkF32 y, nkF32 z, nkF32 w)
 {
     NK_ASSERT(g_imm.draw_started); // Attempting to add draw data before calling imm_begin!
+    imm_grow_vertex_array_if_necessary(g_imm.color_count+1);
     g_imm.vertices[g_imm.color_count++].color = { x,y,z,w };
 }
 
 GLOBAL void imm_texcoord(nkF32 x, nkF32 y, nkF32 z, nkF32 w)
 {
     NK_ASSERT(g_imm.draw_started); // Attempting to add draw data before calling imm_begin!
+    imm_grow_vertex_array_if_necessary(g_imm.texcoord_count+1);
     g_imm.vertices[g_imm.texcoord_count++].texcoord = { x,y,z,w };
 }
 
 GLOBAL void imm_userdata0(nkF32 x, nkF32 y, nkF32 z, nkF32 w)
 {
     NK_ASSERT(g_imm.draw_started); // Attempting to add draw data before calling imm_begin!
+    imm_grow_vertex_array_if_necessary(g_imm.userdata0_count+1);
     g_imm.vertices[g_imm.userdata0_count++].userdata0 = { x,y,z,w };
 }
 
 GLOBAL void imm_userdata1(nkF32 x, nkF32 y, nkF32 z, nkF32 w)
 {
     NK_ASSERT(g_imm.draw_started); // Attempting to add draw data before calling imm_begin!
+    imm_grow_vertex_array_if_necessary(g_imm.userdata1_count+1);
     g_imm.vertices[g_imm.userdata1_count++].userdata1 = { x,y,z,w };
 }
 
 GLOBAL void imm_userdata2(nkF32 x, nkF32 y, nkF32 z, nkF32 w)
 {
     NK_ASSERT(g_imm.draw_started); // Attempting to add draw data before calling imm_begin!
+    imm_grow_vertex_array_if_necessary(g_imm.userdata2_count+1);
     g_imm.vertices[g_imm.userdata2_count++].userdata2 = { x,y,z,w };
 }
 
 GLOBAL void imm_userdata3(nkF32 x, nkF32 y, nkF32 z, nkF32 w)
 {
     NK_ASSERT(g_imm.draw_started); // Attempting to add draw data before calling imm_begin!
+    imm_grow_vertex_array_if_necessary(g_imm.userdata3_count+1);
     g_imm.vertices[g_imm.userdata3_count++].userdata3 = { x,y,z,w };
 }
 
