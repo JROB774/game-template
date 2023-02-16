@@ -16,7 +16,10 @@ GLOBAL void imm_begin_frame(void);
 GLOBAL void imm_end_frame  (void);
 
 // General =====================================================================
-GLOBAL void imm_reset(); // Reset all of the imm state values back to their defaults.
+GLOBAL void imm_clear(nkVec4 color);
+GLOBAL void imm_clear(nkVec3 color);
+GLOBAL void imm_clear(nkF32 r, nkF32 g, nkF32 b, nkF32 a = 1.0f);
+GLOBAL void imm_reset(void); // Reset all of the imm state values back to their defaults.
 // =============================================================================
 
 // State Setters ===============================================================
@@ -53,7 +56,7 @@ GLOBAL Sampler imm_get_def_sampler (ImmSampler samp); // Imm defines some common
 // A flexible immediate mode drawing system that allows for specifying a number
 // of different built-in vertex data types, as well as custom user data. Coupled
 // with binding custom shaders and textures, this system can do quite a bit.
-GLOBAL void imm_begin    (DrawMode draw_mode);                                      // Begin a draw operation with a specifical draw mode.
+GLOBAL void imm_begin    (DrawMode draw_mode, nkBool should_clear = NK_FALSE);      // Begin a draw operation with a specifical draw mode.
 GLOBAL void imm_end      (void);                                                    // End a draw operation and render to the current target.
 GLOBAL void imm_position (nkF32 x, nkF32 y,        nkF32 z = 0.0f, nkF32 w = 1.0f); // Add a vertex position to the current draw data.
 GLOBAL void imm_normal   (nkF32 x, nkF32 y,        nkF32 z = 0.0f, nkF32 w = 0.0f); // Add a vertex normal to the current draw data.

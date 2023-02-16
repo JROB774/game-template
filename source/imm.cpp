@@ -41,6 +41,8 @@ struct ImmContext
     Shader       default_shader;
     Sampler      default_samplers[ImmSampler_TOTAL];
 
+    nkVec4       clear_color = NK_V4_BLACK;
+
     DrawMode     current_draw_mode;
     Texture      current_color_target;
     Texture      current_depth_target;
@@ -145,6 +147,24 @@ GLOBAL void imm_end_frame(void)
 }
 
 // General =====================================================================
+
+GLOBAL void imm_clear(nkVec4 color)
+{
+    // Do an empty render pass where we just clear the current render target.
+    g_imm.clear_color = color;
+    imm_begin(DrawMode_Points, NK_TRUE); // Draw mode doesn't matter but we need to define it...
+    imm_end();
+}
+
+GLOBAL void imm_clear(nkVec3 color)
+{
+    imm_clear({ color.r,color.g,color.b,1.0f });
+}
+
+GLOBAL void imm_clear(nkF32 r, nkF32 g, nkF32 b, nkF32 a)
+{
+    imm_clear({ r,g,b,a });
+}
 
 GLOBAL void imm_reset(void)
 {
@@ -307,7 +327,7 @@ GLOBAL Sampler imm_get_def_sampler(ImmSampler samp)
 
 // Polygon Drawing =============================================================
 
-GLOBAL void imm_begin(DrawMode draw_mode)
+GLOBAL void imm_begin(DrawMode draw_mode, nkBool should_clear)
 {
     NK_ASSERT(!g_imm.draw_started); // Cannot start a new draw inside an existing one!
 
@@ -340,7 +360,8 @@ GLOBAL void imm_begin(DrawMode draw_mode)
         pass_desc.cull_face            = CullFace_None;
         pass_desc.depth_read           = g_imm.current_depth_read;
         pass_desc.depth_write          = g_imm.current_depth_write;
-        pass_desc.clear                = NK_FALSE;
+        pass_desc.clear                = should_clear;
+        pass_desc.clear_color          = g_imm.clear_color;
         g_imm.render_pass = create_render_pass(pass_desc);
 
         g_imm.pass_needs_rebuild = NK_FALSE;
