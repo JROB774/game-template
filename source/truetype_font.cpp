@@ -189,12 +189,7 @@ INTERNAL nkF32 get_truetype_line_width(TrueTypeFont font, const wchar_t* text)
 
 GLOBAL void init_truetype_font_system(void)
 {
-    #if defined(USE_RENDERER_ADVANCED)
-    g_truetype.font_shader = asset_manager_load<Shader>("advanced_text.shader");
-    #endif // USE_RENDERER_ADVANCED
-    #if defined(USE_RENDERER_SIMPLE)
-    g_truetype.font_shader = asset_manager_load<Shader>("simple_text.shader");
-    #endif // USE_RENDERER_SIMPLE
+    g_truetype.font_shader = asset_manager_load<Shader>("text.shader");
 
     FT_Init_FreeType(&g_truetype.freetype);
     if(!g_truetype.freetype)
@@ -250,18 +245,12 @@ GLOBAL TrueTypeFont create_truetype_font(const TrueTypeFontDesc& desc)
         bake_font_at_size(font, desc.px_sizes[i]);
     }
 
-    #if defined(USE_RENDERER_ADVANCED)
     TextureDesc texture_desc;
     texture_desc.format = TextureFormat_R;
     texture_desc.width  = FONT_ATLAS_SIZE;
     texture_desc.height = FONT_ATLAS_SIZE;
     texture_desc.data   = font->atlas_pixels;
     font->atlas_texture = create_texture(texture_desc);
-    #endif // USE_RENDERER_ADVANCED
-
-    #if defined(USE_RENDERER_SIMPLE)
-    font->atlas_texture = create_texture(FONT_ATLAS_SIZE,FONT_ATLAS_SIZE, 1, font->atlas_pixels, SamplerFilter_Linear, SamplerWrap_Clamp);
-    #endif // USE_RENDERER_SIMPLE
 
     font->current_size = desc.px_sizes[0];
 
@@ -307,18 +296,12 @@ GLOBAL void set_truetype_font_size(TrueTypeFont font, nkS32 new_size)
         // We need to update the texture with the new font data.
         free_texture(font->atlas_texture);
 
-        #if defined(USE_RENDERER_ADVANCED)
         TextureDesc texture_desc;
         texture_desc.format = TextureFormat_R;
         texture_desc.width  = FONT_ATLAS_SIZE;
         texture_desc.height = FONT_ATLAS_SIZE;
         texture_desc.data   = font->atlas_pixels;
         font->atlas_texture = create_texture(texture_desc);
-        #endif // USE_RENDERER_ADVANCED
-
-        #if defined(USE_RENDERER_SIMPLE)
-        font->atlas_texture = create_texture(FONT_ATLAS_SIZE,FONT_ATLAS_SIZE, 1, font->atlas_pixels, SamplerFilter_Linear, SamplerWrap_Clamp);
-        #endif // USE_RENDERER_SIMPLE
     }
 }
 
@@ -477,8 +460,6 @@ GLOBAL nkF32 get_truetype_line_height(TrueTypeFont font)
 
 GLOBAL void draw_truetype_text(TrueTypeFont font, nkF32 x, nkF32 y, const wchar_t* text, nkVec4 color)
 {
-    #if defined(USE_RENDERER_ADVANCED)
-
     NK_ASSERT(font);
 
     if(!text) return;
@@ -541,66 +522,6 @@ GLOBAL void draw_truetype_text(TrueTypeFont font, nkF32 x, nkF32 y, const wchar_
 
     imm_set_shader(old_shader);
     imm_set_texture(old_texture);
-
-    #endif // USE_RENDERER_ADVANCED
-
-    #if defined(USE_RENDERER_SIMPLE)
-
-    NK_ASSERT(font);
-
-    if(!text) return;
-
-    if(wcslen(text) == 0)
-    {
-        return;
-    }
-
-    TrueTypeMetrics metrics = get_truetype_font_metrics(font);
-
-    nkF32 start_x = x;
-    nkF32 start_y = y;
-    nkF32 tx = start_x;
-    nkF32 ty = start_y;
-
-    imm_begin(DrawMode_Triangles, font->atlas_texture, g_truetype.font_shader);
-
-    for(nkU64 i=0,n=wcslen(text); i<n; ++i)
-    {
-        wchar_t current_char = text[i];
-        if(current_char == L'\n')
-        {
-            tx = start_x;
-            ty += roundf(metrics.ascent - metrics.descent);
-        }
-        else
-        {
-            Glyph glyph = get_glyph(font, current_char);
-            nkF32 advance = glyph.info.advance + get_kerning(font, current_char, text[i+1]);
-
-            nkF32 x1 = roundf(tx) + glyph.info.offset_x;
-            nkF32 y1 = roundf(ty) + glyph.info.offset_y;
-            nkF32 x2 = x1         + glyph.info.width;
-            nkF32 y2 = y1         + glyph.info.height;
-
-            nkF32 s1 =      (glyph.bounds.x / get_texture_width(font->atlas_texture));
-            nkF32 t1 =      (glyph.bounds.y / get_texture_height(font->atlas_texture));
-            nkF32 s2 = s1 + (glyph.bounds.w / get_texture_width(font->atlas_texture));
-            nkF32 t2 = t1 + (glyph.bounds.h / get_texture_height(font->atlas_texture));
-
-            imm_vertex({ { x1,y2 }, { s1,t2 }, color });
-            imm_vertex({ { x1,y1 }, { s1,t1 }, color });
-            imm_vertex({ { x2,y2 }, { s2,t2 }, color });
-            imm_vertex({ { x2,y2 }, { s2,t2 }, color });
-            imm_vertex({ { x1,y1 }, { s1,t1 }, color });
-            imm_vertex({ { x2,y1 }, { s2,t1 }, color });
-
-            tx += roundf(advance);
-        }
-    }
-
-    imm_end();
-
-    #endif // USE_RENDERER_SIMPLE
 }
 
 GLOBAL void draw_truetype_char(TrueTypeFont font, nkF32 x, nkF32 y, wchar_t chr, nkVec4 color)

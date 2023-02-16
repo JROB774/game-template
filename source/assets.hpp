@@ -78,16 +78,10 @@ const nkChar* asset_path<Music>(void)
 template<>
 Shader asset_load<Shader>(void* data, nkU64 size, nkBool from_npak, void* userdata)
 {
-    #if defined(USE_RENDERER_ADVANCED)
     ShaderDesc desc = (userdata) ? *NK_CAST(ShaderDesc*, userdata) : ShaderDesc();
-    desc.data       = data;
-    desc.bytes      = size;
+    desc.data  = data;
+    desc.bytes = size;
     return create_shader(desc);
-    #endif // USE_RENDERER_ADVANCED
-
-    #if defined(USE_RENDERER_SIMPLE)
-    return create_shader(data, size);
-    #endif // USE_RENDERER_SIMPLE
 }
 template<>
 void asset_free<Shader>(Asset<Shader>& asset)
@@ -105,7 +99,6 @@ const nkChar* asset_path<Shader>(void)
 template<>
 Texture asset_load<Texture>(void* data, nkU64 size, nkBool from_npak, void* userdata)
 {
-    #if defined(USE_RENDERER_ADVANCED)
     nkS32 w,h,bpp;
 
     nkU8* pixels = NK_CAST(nkU8*, stbi_load_from_memory(NK_CAST(stbi_uc*, data), NK_CAST(int,size), &w,&h,&bpp, 4));
@@ -119,17 +112,6 @@ Texture asset_load<Texture>(void* data, nkU64 size, nkBool from_npak, void* user
     desc.data   = pixels;
 
     return create_texture(desc);
-    #endif // USE_RENDERER_ADVANCED
-
-    #if defined(USE_RENDERER_SIMPLE)
-    nkS32 w,h,bpp;
-
-    nkU8* pixels = NK_CAST(nkU8*, stbi_load_from_memory(NK_CAST(stbi_uc*, data), NK_CAST(int,size), &w,&h,&bpp, 4));
-    if(!pixels) return NULL;
-    NK_DEFER(stbi_image_free(pixels));
-
-    return create_texture(w,h,4, pixels, SamplerFilter_Nearest, SamplerWrap_Clamp);
-    #endif // USE_RENDERER_SIMPLE
 }
 template<>
 void asset_free<Texture>(Asset<Texture>& asset)
