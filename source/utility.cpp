@@ -1,55 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
 //
-// Stack data structure.
-//
-
-template<typename T, nkU32 N>
-GLOBAL NKFORCEINLINE void stack_push(Stack<T,N>* stack, T value)
-{
-    NK_ASSERT(stack);
-    NK_ASSERT(stack->size < N);
-    stack->buffer[stack->size++] = value;
-}
-
-template<typename T, nkU32 N>
-GLOBAL NKFORCEINLINE T stack_pop(Stack<T,N>* stack)
-{
-    NK_ASSERT(stack);
-    NK_ASSERT(stack->size > 0);
-    return stack->buffer[--stack->size];
-}
-
-template<typename T, nkU32 N>
-GLOBAL NKFORCEINLINE T stack_peek(Stack<T,N>* stack)
-{
-    NK_ASSERT(stack);
-    NK_ASSERT(stack->size > 0);
-    return stack->buffer[stack->size-1];
-}
-
-template<typename T, nkU32 N>
-GLOBAL NKFORCEINLINE nkU32 stack_size(Stack<T,N>* stack)
-{
-    NK_ASSERT(stack);
-    return stack->size;
-}
-
-template<typename T, nkU32 N>
-GLOBAL NKFORCEINLINE nkBool stack_empty(Stack<T,N>* stack)
-{
-    NK_ASSERT(stack);
-    return (stack->size == 0);
-}
-
-template<typename T, nkU32 N>
-GLOBAL NKFORCEINLINE void stack_clear(Stack<T,N>* stack)
-{
-    NK_ASSERT(stack);
-    stack->size = 0;
-}
-
-//
 // String helpers.
 //
 

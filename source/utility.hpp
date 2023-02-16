@@ -17,21 +17,6 @@ struct fCircle { nkF32 x,y,r;       };
 struct iRect   { nkS32 x,y,w,h;     };
 struct fRect   { nkF32 x,y,w,h;     };
 
-// Stack data structure.
-template<typename T, nkU32 N>
-struct Stack
-{
-    T     buffer[N] = NK_ZERO_MEM;
-    nkU32 size      = 0;
-};
-
-template<typename T, nkU32 N> GLOBAL NKFORCEINLINE void   stack_push (Stack<T,N>* stack, T value);
-template<typename T, nkU32 N> GLOBAL NKFORCEINLINE T      stack_pop  (Stack<T,N>* stack);
-template<typename T, nkU32 N> GLOBAL NKFORCEINLINE T      stack_peek (Stack<T,N>* stack);
-template<typename T, nkU32 N> GLOBAL NKFORCEINLINE nkU32  stack_size (Stack<T,N>* stack);
-template<typename T, nkU32 N> GLOBAL NKFORCEINLINE nkBool stack_empty(Stack<T,N>* stack);
-template<typename T, nkU32 N> GLOBAL NKFORCEINLINE void   stack_clear(Stack<T,N>* stack);
-
 // String helpers.
 GLOBAL wchar_t* convert_string_to_wide(const nkChar* str);
 GLOBAL nkString format_string         (const nkChar* fmt, ...);
