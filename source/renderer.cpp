@@ -56,6 +56,30 @@ INTERNAL nkBool   g_pass_started;
 INTERNAL DrawMode g_current_draw_mode;
 INTERNAL GLuint   g_vao;
 
+// On Windows we also enable the debug callback. We can't/don't do this on MacOS or the web build because
+// they do not support OpenGL versions that have access to the debug callback unfortunately. On those
+// platforms we setup both a GL3.3 and GLES3 context respectively and on Windows we setup a GL4.3 context.
+#if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
+INTERNAL void opengl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userdata)
+{
+    NK_UNUSED(userdata);
+    NK_UNUSED(length);
+    NK_UNUSED(id);
+    NK_UNUSED(type);
+    NK_UNUSED(source);
+
+    const nkChar* severity_string = "Info";
+    switch(severity)
+    {
+        case GL_DEBUG_SEVERITY_LOW: severity_string = "Low"; break;
+        case GL_DEBUG_SEVERITY_MEDIUM: severity_string = "Medium"; break;
+        case GL_DEBUG_SEVERITY_HIGH: severity_string = "High"; break;
+    }
+
+    printf("[OpenGL %s]: %s\n", severity_string, message);
+}
+#endif // BUILD_DEBUG && NK_OS_WIN32
+
 GLOBAL void init_render_system(void)
 {
     printf("[OpenGL]: Initializing System\n");
@@ -68,6 +92,12 @@ GLOBAL void init_render_system(void)
     printf("[OpenGL]: GPU Vendor     : %s\n", glGetString(GL_VENDOR));
     printf("[OpenGL]: OpenGL Version : %s\n", glGetString(GL_VERSION));
     printf("[OpenGL]: GLSL Version   : %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    // Enable debug logging when in debug mode for extra help/info from OpenGL.
+    #if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(opengl_debug_callback, NULL);
+    #endif // BUILD_DEBUG && NK_OS_WIN32
 
     // We need one Vertex Attribute Object in order to render with modern OpenGL.
     #if defined(BUILD_NATIVE)
@@ -86,8 +116,13 @@ GLOBAL void quit_render_system(void)
 GLOBAL void setup_renderer_platform(void)
 {
     #if defined(BUILD_NATIVE)
+    #if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    #else
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    #endif // BUILD_DEBUG && NK_OS_WIN32
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     #endif // BUILD_NATIVE
     #if defined(BUILD_WEB)
@@ -170,8 +205,13 @@ INTERNAL GLuint compile_shader(void* data, nkU64 bytes, GLenum type)
     const GLint lengths[2] = { -1, NK_CAST(GLint, bytes) };
 
     #if defined(BUILD_NATIVE)
+    #if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
+    if(type == GL_VERTEX_SHADER) sources[0] = "#version 430\n#define VERT_SHADER 1\n";
+    if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 430\n#define FRAG_SHADER 1\n";
+    #else
     if(type == GL_VERTEX_SHADER) sources[0] = "#version 330\n#define VERT_SHADER 1\n";
     if(type == GL_FRAGMENT_SHADER) sources[0] = "#version 330\n#define FRAG_SHADER 1\n";
+    #endif // BUILD_DEBUG && NK_OS_WIN32
     #endif // BUILD_NATIVE
     #if defined(BUILD_WEB)
     if(type == GL_VERTEX_SHADER) sources[0] = "#version 300 es\n#define VERT_SHADER 1\nprecision mediump float;\n";
