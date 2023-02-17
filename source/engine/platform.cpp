@@ -225,6 +225,7 @@ INTERNAL void end_render_frame(void)
             imm_set_viewport({ 0.0f,0.0f,ww,wh });
             imm_set_color_target(BACKBUFFER);
             imm_set_texture(g_ctx.screen);
+            imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));
             imm_begin(DrawMode_TriangleStrip);
             imm_position(0.0f,  wh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
             imm_position(0.0f,0.0f); imm_texcoord(0.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
@@ -254,6 +255,7 @@ INTERNAL void end_render_frame(void)
             imm_set_viewport({ 0.0f,0.0f,ww,wh });
             imm_set_color_target(BACKBUFFER);
             imm_set_texture(g_ctx.screen);
+            imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));
             imm_begin(DrawMode_TriangleStrip);
             imm_position(vx,   vy+vh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
             imm_position(vx,   vy   ); imm_texcoord(0.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
@@ -281,6 +283,7 @@ INTERNAL void end_render_frame(void)
             imm_set_viewport({ 0.0f,0.0f,ww,wh });
             imm_set_color_target(BACKBUFFER);
             imm_set_texture(g_ctx.screen);
+            imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));
             imm_begin(DrawMode_TriangleStrip);
             imm_position(vx,   vy+vh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
             imm_position(vx,   vy   ); imm_texcoord(0.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
