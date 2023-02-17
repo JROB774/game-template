@@ -59,7 +59,7 @@ set defs=-D BUILD_WEB
 set idir=-I ../../depends/nksdk/nklibs -I ../../depends/stb
 set libs=-s WASM=1 -s USE_SDL=2 -s USE_SDL_MIXER=2 -s USE_OGG=1 -s USE_VORBIS=1 -s USE_FREETYPE=1 -s MIN_WEBGL_VERSION=1 -s MAX_WEBGL_VERSION=2 -lidbfs.js
 set cflg=-std=c++14
-set lflg=--preload-file ../../assets -s EXPORTED_FUNCTIONS="['_main', '_main_callback']" -s EXPORTED_RUNTIME_METHODS="['ccall']" -s ALLOW_MEMORY_GROWTH
+set lflg=--preload-file ../../assets -s EXPORTED_FUNCTIONS="['_main', '_filesystem_ready']" -s EXPORTED_RUNTIME_METHODS="['ccall']" -s ALLOW_MEMORY_GROWTH
 
 if "%~2"=="release" (
     set cflg=%cflg% -O2

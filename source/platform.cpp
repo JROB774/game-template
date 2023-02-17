@@ -186,7 +186,7 @@ INTERNAL void main_init(void)
     // Enable VSync by default, if we don't get it then oh well.
     if(SDL_GL_SetSwapInterval(1) == 0)
     {
-        printf("VSync Enabled!\n");
+        printf("[Platform]: VSync Enabled!\n");
     }
 
     init_render_system();
@@ -329,14 +329,35 @@ int main(int argc, char** argv)
 #endif // BUILD_NATIVE
 
 #if defined(BUILD_WEB)
-extern "C" void main_callback(void)
+INTERNAL SDL_atomic_t g_filesystem_ready;
+
+extern "C"
 {
-    main_init();
-    emscripten_set_main_loop(main_loop, -1, 1);
+    void filesystem_ready(void)
+    {
+        SDL_AtomicSet(&g_filesystem_ready, 1);
+        printf("[Platform]: IDBFS ready!\n");
+    }
+
+    void main_loop_wrapper(void)
+    {
+        PERSISTENT nkBool initialized = NK_FALSE;
+
+        if(!SDL_AtomicGet(&g_filesystem_ready)) return;
+
+        if(!initialized)
+        {
+            initialized = NK_TRUE;
+            main_init();
+        }
+
+        main_loop();
+    }
 }
+
 int main(int argc, char** argv)
 {
-    app_main(&g_ctx.app_desc);
+    printf("[Platform]: Setting up IDBFS...\n");
 
     EM_ASM
     (
@@ -346,9 +367,13 @@ int main(int argc, char** argv)
         FS.syncfs(true, function(err)
         {
             assert(!err);
-            ccall("main_callback");
+            ccall("filesystem_ready");
         });
     );
+
+    app_main(&g_ctx.app_desc);
+    emscripten_set_main_loop(main_loop_wrapper, -1, 1);
+
     return 0;
 }
 #endif // BUILD_WEB
