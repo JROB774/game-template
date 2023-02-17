@@ -44,13 +44,15 @@ GLOBAL void app_draw(void)
     TrueTypeFont font = asset_manager_load<TrueTypeFont>("helsinki.ttf");
     Texture face = asset_manager_load<Texture>("face.png");
 
-    nkF32 ww = NK_CAST(nkF32, get_window_width());
-    nkF32 wh = NK_CAST(nkF32, get_window_height());
+    nkF32 ww = NK_CAST(nkF32, get_screen_width());
+    nkF32 wh = NK_CAST(nkF32, get_screen_height());
 
     nkF32 hw = ww * 0.5f;
     nkF32 hh = wh * 0.5f;
 
     nkF32 scale = wh / (get_texture_height(face) + 512.0f);
+
+    imm_set_color_target(get_screen());
 
     imm_clear(0.0f, 0.6f, 0.8f);
 

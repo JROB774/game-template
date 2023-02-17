@@ -35,6 +35,7 @@ struct PlatformContext
     AppDesc       app_desc;
     SDL_Window*   window;
     SDL_GLContext glcontext;
+    Texture       screen;
     nkBool        running;
     nkChar*       base_path;
     nkS32         window_x;
@@ -164,6 +165,132 @@ INTERNAL void save_program_state(void)
     }
 }
 
+INTERNAL void begin_render_frame(void)
+{
+    nkS32 iww = get_window_width();
+    nkS32 iwh = get_window_height();
+    nkF32 fww = NK_CAST(nkF32, iww);
+    nkF32 fwh = NK_CAST(nkF32, iwh);
+
+    nkS32 isw = get_texture_width(g_ctx.screen);
+    nkS32 ish = get_texture_height(g_ctx.screen);
+    nkF32 fsw = NK_CAST(nkF32, isw);
+    nkF32 fsh = NK_CAST(nkF32, ish);
+
+    switch(g_ctx.app_desc.screen_mode)
+    {
+        case ScreenMode_Window:
+        {
+            set_viewport(0.0f,0.0f,fww,fwh);
+        } break;
+
+        case ScreenMode_Fit:
+        {
+            if(iww != isw || iwh != ish)
+                resize_texture(g_ctx.screen, iww,iwh); // The screen target should always fit the window.
+            set_viewport(0.0f,0.0f,fww,fwh);
+        } break;
+
+        case ScreenMode_Stretch:
+        case ScreenMode_Letterbox:
+        case ScreenMode_PixelPerfect:
+        {
+            set_viewport(0.0f,0.0f,fsw,fsh);
+        } break;
+    }
+
+    imm_clear(0.0f, 0.0f, 0.0f);
+}
+
+INTERNAL void end_render_frame(void)
+{
+    nkF32 ww = NK_CAST(nkF32, get_window_width());
+    nkF32 wh = NK_CAST(nkF32, get_window_height());
+
+    nkF32 sw = NK_CAST(nkF32, get_texture_width(g_ctx.screen));
+    nkF32 sh = NK_CAST(nkF32, get_texture_height(g_ctx.screen));
+
+    imm_reset();
+
+    switch(g_ctx.app_desc.screen_mode)
+    {
+        case ScreenMode_Window:
+        {
+            // Do nothing as we have already been drawing to the window...
+        } break;
+
+        case ScreenMode_Fit:
+        case ScreenMode_Stretch:
+        {
+            imm_set_viewport({ 0.0f,0.0f,ww,wh });
+            imm_set_color_target(BACKBUFFER);
+            imm_set_texture(g_ctx.screen);
+            imm_begin(DrawMode_TriangleStrip);
+            imm_position(0.0f,  wh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(0.0f,0.0f); imm_texcoord(0.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(  ww,  wh); imm_texcoord(1.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(  ww,0.0f); imm_texcoord(1.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_end();
+        } break;
+
+        case ScreenMode_Letterbox:
+        {
+            nkF32 sx = ww / sw;
+            nkF32 sy = wh / sh;
+
+            nkF32 dstw = sw;
+            nkF32 dsth = sh;
+
+            if(fabsf(sx) < fabsf(sy)) dsth = roundf((sh/sw)*dstw);
+            if(fabsf(sx) > fabsf(sy)) dstw = roundf((sw/sh)*dsth);
+
+            nkF32 scale = nk_min(ww / dstw, wh / dsth);
+
+            nkF32 vw = (dstw * scale);
+            nkF32 vh = (dsth * scale);
+            nkF32 vx = (ww - vw) * 0.5f;
+            nkF32 vy = (wh - vh) * 0.5f;
+
+            imm_set_viewport({ 0.0f,0.0f,ww,wh });
+            imm_set_color_target(BACKBUFFER);
+            imm_set_texture(g_ctx.screen);
+            imm_begin(DrawMode_TriangleStrip);
+            imm_position(vx,   vy+vh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(vx,   vy   ); imm_texcoord(0.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(vx+vw,vy+vh); imm_texcoord(1.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(vx+vw,vy   ); imm_texcoord(1.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_end();
+        } break;
+
+        case ScreenMode_PixelPerfect:
+        {
+            nkF32 dstw = sw;
+            nkF32 dsth = sh;
+
+            while((dstw+sw <= ww) && (dsth+sh <= wh))
+            {
+                dstw += sw;
+                dsth += sh;
+            }
+
+            nkF32 vw = dstw;
+            nkF32 vh = dsth;
+            nkF32 vx = (ww - vw) * 0.5f;
+            nkF32 vy = (wh - vh) * 0.5f;
+
+            imm_set_viewport({ 0.0f,0.0f,ww,wh });
+            imm_set_color_target(BACKBUFFER);
+            imm_set_texture(g_ctx.screen);
+            imm_begin(DrawMode_TriangleStrip);
+            imm_position(vx,   vy+vh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(vx,   vy   ); imm_texcoord(0.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(vx+vw,vy+vh); imm_texcoord(1.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_position(vx+vw,vy   ); imm_texcoord(1.0f,1.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
+            imm_end();
+        } break;
+    }
+}
+
 INTERNAL void main_init(void)
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -201,6 +328,15 @@ INTERNAL void main_init(void)
 
     imm_init();
 
+    // Create the screen render target texture.
+    TextureDesc td;
+    td.type   = TextureType_2D;
+    td.format = TextureFormat_RGB;
+    td.width  = g_ctx.app_desc.screen_size.x;
+    td.height = g_ctx.app_desc.screen_size.y;
+    td.data   = NULL;
+    g_ctx.screen = create_texture(td);
+
     app_init();
 
     g_ctx.running = NK_TRUE;
@@ -209,6 +345,8 @@ INTERNAL void main_init(void)
 INTERNAL void main_quit(void)
 {
     app_quit();
+
+    free_texture(g_ctx.screen);
 
     imm_quit();
 
@@ -288,7 +426,11 @@ INTERNAL void main_loop(void)
         update_timer -= dt;
     }
 
-    do_render_frame();
+    imm_begin_frame();
+    begin_render_frame();
+    app_draw();
+    end_render_frame();
+    imm_end_frame();
 
     SDL_GL_SwapWindow(g_ctx.window);
 
@@ -451,12 +593,37 @@ GLOBAL iPoint get_window_size(void)
 
 GLOBAL nkS32 get_window_width(void)
 {
-    return NK_CAST(nkS32, get_window_size().x);
+    return get_window_size().x;
 }
 
 GLOBAL nkS32 get_window_height(void)
 {
-    return NK_CAST(nkS32, get_window_size().y);
+    return get_window_size().y;
+}
+
+GLOBAL Texture get_screen(void)
+{
+    return ((g_ctx.app_desc.screen_mode == ScreenMode_Window) ? BACKBUFFER : g_ctx.screen);
+}
+
+GLOBAL iPoint get_screen_size(void)
+{
+    if(g_ctx.app_desc.screen_mode == ScreenMode_Window)
+        return get_window_size();
+    iPoint size;
+    size.x = get_texture_width(g_ctx.screen);
+    size.y = get_texture_height(g_ctx.screen);
+    return size;
+}
+
+GLOBAL nkS32 get_screen_width(void)
+{
+    return get_screen_size().x;
+}
+
+GLOBAL nkS32 get_screen_height(void)
+{
+    return get_screen_size().y;
 }
 
 GLOBAL void set_fullscreen(nkBool enable)

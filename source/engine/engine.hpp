@@ -29,8 +29,6 @@
 
 #include "utility.hpp"
 #include "collision.hpp"
-#include "application.hpp"
-#include "platform.hpp"
 #include "asset_manager.hpp"
 #include "audio.hpp"
 #include "input.hpp"
@@ -39,7 +37,9 @@
 #include "animation.hpp"
 #include "renderer.hpp"
 #include "imm.hpp"
+#include "platform.hpp"
 #include "assets.hpp"
+#include "application.hpp"
 
 #include "utility.cpp"
 #include "collision.cpp"

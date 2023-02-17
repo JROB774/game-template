@@ -132,13 +132,6 @@ GLOBAL void setup_renderer_platform(void)
     #endif // BUILD_WEB
 }
 
-GLOBAL void do_render_frame(void)
-{
-    imm_begin_frame();
-    app_draw();
-    imm_end_frame();
-}
-
 // Buffer ======================================================================
 
 DEFINE_PRIVATE_TYPE(Buffer)

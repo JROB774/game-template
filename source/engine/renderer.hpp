@@ -3,7 +3,6 @@
 GLOBAL void init_render_system     (void);
 GLOBAL void quit_render_system     (void);
 GLOBAL void setup_renderer_platform(void);
-GLOBAL void do_render_frame        (void);
 
 // Buffer ======================================================================
 DECLARE_PRIVATE_TYPE(Buffer);
