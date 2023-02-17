@@ -601,7 +601,6 @@ GLOBAL void bind_buffer(Buffer buffer, nkS32 slot)
     NK_ASSERT(g_pass_started); // Cannot bind outside of a render pass!
     NK_ASSERT(buffer);
 
-    // @Incomplete: Handle properly setting uniform and texture bindings in GLES3!
     if(buffer->type != GL_UNIFORM_BUFFER) glBindBuffer(buffer->type, buffer->handle);
     else glBindBufferBase(buffer->type, slot, buffer->handle);
 }
