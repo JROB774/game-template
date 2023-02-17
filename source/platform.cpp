@@ -329,13 +329,13 @@ int main(int argc, char** argv)
 #endif // BUILD_NATIVE
 
 #if defined(BUILD_WEB)
-INTERNAL SDL_atomic_t g_filesystem_ready;
+INTERNAL SDL_atomic_t g_idbfs_ready;
 
 extern "C"
 {
     void filesystem_ready(void)
     {
-        SDL_AtomicSet(&g_filesystem_ready, 1);
+        SDL_AtomicSet(&g_idbfs_ready, 1);
         printf("[Platform]: IDBFS ready!\n");
     }
 
@@ -343,7 +343,7 @@ extern "C"
     {
         PERSISTENT nkBool initialized = NK_FALSE;
 
-        if(!SDL_AtomicGet(&g_filesystem_ready)) return;
+        if(SDL_AtomicGet(&g_idbfs_ready)) return;
 
         if(!initialized)
         {
