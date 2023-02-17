@@ -14,7 +14,7 @@ goto end
 echo ----------------------------------------
 
 set defs=-D BUILD_NATIVE -D _CRT_SECURE_NO_WARNINGS
-set idir=-I ../../depends/sdl/win32/include -I ../../depends/sdl_mixer/win32/include -I ../../depends/freetype/win32/include -I ../../depends/nksdk/nklibs -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb
+set idir=-I ../../depends/sdl/win32/include -I ../../depends/sdl_mixer/win32/include -I ../../depends/freetype/win32/include -I ../../depends/nksdk/nklibs -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb -I ../../source/engine
 set ldir=-libpath:../../depends/sdl/win32/lib -libpath:../../depends/sdl_mixer/win32/lib -libpath:../../depends/freetype/win32/lib
 set libs=SDL2main.lib SDL2.lib SDL2_mixer.lib freetype.lib opengl32.lib shell32.lib
 set cflg=-std:c++14 -Zc:__cplusplus -W4 -wd4201 -wd4100 -wd4505
@@ -41,7 +41,7 @@ depends\makeicon\binaries\win32\makeicon -platform:win32 -sizes:256,128,96,64,48
 
 pushd binary\win32
 rc -i ../../redist/win32/res ../../redist/win32/res/icon.rc
-call ../../timer.bat "cl ../../source/application.cpp %cflg% %defs% %idir% -Fe:game.exe -link %lflg% %ldir% %libs% ../../redist/win32/res/icon.res"
+call ../../timer.bat "cl ../../source/myapp.cpp %cflg% %defs% %idir% -Fe:game.exe -link %lflg% %ldir% %libs% ../../redist/win32/res/icon.res"
 popd
 
 echo ----------------------------------------
@@ -56,7 +56,7 @@ call depends\emsdk\emsdk activate latest
 call depends\emsdk\emsdk_env.bat
 
 set defs=-D BUILD_WEB
-set idir=-I ../../depends/nksdk/nklibs -I ../../depends/stb
+set idir=-I ../../depends/nksdk/nklibs -I ../../depends/stb -I ../../source/engine
 set libs=-s WASM=1 -s USE_SDL=2 -s USE_SDL_MIXER=2 -s USE_OGG=1 -s USE_VORBIS=1 -s USE_FREETYPE=1 -s MIN_WEBGL_VERSION=1 -s MAX_WEBGL_VERSION=2 -lidbfs.js
 set cflg=-std=c++14
 set lflg=--preload-file ../../assets -s EXPORTED_FUNCTIONS="['_main', '_filesystem_ready']" -s EXPORTED_RUNTIME_METHODS="['ccall']" -s ALLOW_MEMORY_GROWTH
@@ -72,7 +72,7 @@ if "%~2"=="release" (
 if not exist binary\web mkdir binary\web
 
 pushd binary\web
-call ../../timer.bat "emcc %libs% %idir% %cflg% %lflg% %defs% ../../source/application.cpp -o game.html"
+call ../../timer.bat "emcc %libs% %idir% %cflg% %lflg% %defs% ../../source/myapp.cpp -o game.html"
 popd
 
 echo ----------------------------------------
