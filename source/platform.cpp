@@ -343,7 +343,7 @@ extern "C"
     {
         PERSISTENT nkBool initialized = NK_FALSE;
 
-        if(SDL_AtomicGet(&g_idbfs_ready)) return;
+        if(!SDL_AtomicGet(&g_idbfs_ready)) return;
 
         if(!initialized)
         {
