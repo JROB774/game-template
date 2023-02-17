@@ -1,7 +1,7 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
 #if !defined(APP_FILE_SYSTEM_ROOT)
-#error APP_FILE_SYSTEM_ROOT is required to be defined as a string!
+#define APP_FILE_SYSTEM_ROOT "/GAME"
 #endif // !APP_FILE_SYSTEM_ROOT
 
 #if defined(BUILD_WEB)
