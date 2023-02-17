@@ -1,5 +1,9 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
+#if !defined(APP_FILE_SYSTEM_ROOT)
+#error APP_FILE_SYSTEM_ROOT is required to be defined as a string!
+#endif // !APP_FILE_SYSTEM_ROOT
+
 #if defined(BUILD_WEB)
 #include <emscripten.h>
 #endif // BUILD_WEB
@@ -361,9 +365,8 @@ int main(int argc, char** argv)
 
     EM_ASM
     (
-        // @Setup: Change these names!
-        FS.mkdir("/GAME");
-        FS.mount(IDBFS, {}, "/GAME");
+        FS.mkdir(APP_FILESYSTEM_ROOT);
+        FS.mount(IDBFS, {}, APP_FILESYSTEM_ROOT);
         FS.syncfs(true, function(err)
         {
             assert(!err);
