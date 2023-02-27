@@ -1,7 +1,5 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-#define APP_FILE_SYSTEM_ROOT "/GAME" // @Setup: Change the name!
-
 #include <engine.hpp>
 
 INTERNAL constexpr nkF32 MIN_FACE_ROTATION = -0.30f;

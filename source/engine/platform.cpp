@@ -1,9 +1,5 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-#if !defined(APP_FILE_SYSTEM_ROOT)
-#define APP_FILE_SYSTEM_ROOT "/GAME"
-#endif // !APP_FILE_SYSTEM_ROOT
-
 #if defined(BUILD_WEB)
 #include <emscripten.h>
 #endif // BUILD_WEB
@@ -515,18 +511,19 @@ int main(int argc, char** argv)
 {
     printf("[Platform]: Setting up IDBFS...\n");
 
-    EM_ASM
-    (
-        FS.mkdir(APP_FILESYSTEM_ROOT);
-        FS.mount(IDBFS, {}, APP_FILESYSTEM_ROOT);
+    app_main(&g_ctx.app_desc);
+
+    EM_ASM_
+    ({
+        FS.mkdir(Module.UTF8ToString($0));
+        FS.mount(IDBFS, {}, Module.UTF8ToString($0));
         FS.syncfs(true, function(err)
         {
             assert(!err);
             ccall("filesystem_ready");
         });
-    );
+    }, g_ctx.app_desc.name);
 
-    app_main(&g_ctx.app_desc);
     emscripten_set_main_loop(main_loop_wrapper, -1, 1);
 
     return 0;
