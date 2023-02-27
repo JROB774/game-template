@@ -328,6 +328,7 @@ INTERNAL void main_init(void)
     init_asset_manager();
     init_truetype_font_system();
     init_input_system();
+    init_debug_ui_system();
 
     imm_init();
 
@@ -353,7 +354,8 @@ INTERNAL void main_quit(void)
 
     imm_quit();
 
-    quit_asset_manager();
+    quit_asset_manager(); // Shutdown first as freeing assets may depend on other systems being around!
+    quit_debug_ui_system();
     quit_input_system();
     quit_truetype_font_system();
     quit_audio_system();
@@ -390,6 +392,7 @@ INTERNAL void main_loop(void)
     while(SDL_PollEvent(&event))
     {
         process_input_events(&event);
+        process_debug_ui_events(&event);
 
         switch(event.type)
         {
@@ -423,8 +426,11 @@ INTERNAL void main_loop(void)
     while(update_timer >= dt)
     {
         update_input_state();
+        begin_debug_ui_frame();
         app_tick(dt);
+        end_debug_ui_frame();
         reset_input_state();
+
         g_ctx.ticks++;
         update_timer -= dt;
     }
@@ -434,6 +440,7 @@ INTERNAL void main_loop(void)
     app_draw();
     end_render_frame();
     imm_end_frame();
+    render_debug_ui_frame();
 
     SDL_GL_SwapWindow(g_ctx.window);
 

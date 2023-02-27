@@ -37,6 +37,11 @@ GLOBAL void app_tick(nkF32 dt)
 
     g_face_angle = nk_sin_range(MIN_FACE_ROTATION, MAX_FACE_ROTATION, g_face_timer * ROTATION_SPEED);
     g_face_angle = nk_clamp(g_face_angle * 2.5f, MIN_FACE_ROTATION, MAX_FACE_ROTATION);
+
+    #if defined(BUILD_DEBUG)
+    if(is_debug_ui_enabled())
+        ImGui::ShowDemoWindow();
+    #endif // BUILD_DEBUG
 }
 
 GLOBAL void app_draw(void)

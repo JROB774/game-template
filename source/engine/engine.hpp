@@ -17,6 +17,8 @@
 #include <nk_hashmap.h>
 #include <nk_defer.h>
 
+#include <stb_image.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -24,8 +26,6 @@
 #include <time.h>
 #include <float.h>
 #include <wchar.h>
-
-#include <stb_image.h>
 
 #include "utility.hpp"
 #include "collision.hpp"
@@ -37,6 +37,7 @@
 #include "animation.hpp"
 #include "renderer.hpp"
 #include "imm.hpp"
+#include "debug_ui.hpp"
 #include "platform.hpp"
 #include "assets.hpp"
 #include "application.hpp"
@@ -50,7 +51,8 @@
 #include "bitmap_font.cpp"
 #include "truetype_font.cpp"
 #include "animation.cpp"
-#include "imm.cpp"
 #include "renderer.cpp"
+#include "imm.cpp"
+#include "debug_ui.cpp"
 
 /*////////////////////////////////////////////////////////////////////////////*/

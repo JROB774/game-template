@@ -4,7 +4,7 @@ if [ "${args[0]}" == "macos" ]; then
     echo "----------------------------------------"
 
     defs="-D BUILD_NATIVE"
-    idir="-I ../../depends/sdl/macos/SDL2.framework/Headers -I ../../depends/sdl_mixer/macos/SDL2_mixer.framework/Headers -I ../../depends/freetype/macos/include -I ../../depends/nksdk/nklibs -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb -I ../../source/engine"
+    idir="-I ../../depends/sdl/macos/SDL2.framework/Headers -I ../../depends/sdl_mixer/macos/SDL2_mixer.framework/Headers -I ../../depends/freetype/macos/include -I ../../depends/nksdk/nklibs -I ../../depends/glew/include -I ../../depends/glew/source -I ../../depends/stb -I ../../depends/imgui -I ../../source/engine"
     ldir="-F ../../depends/sdl/macos -F ../../depends/sdl_mixer/macos -L ../../depends/freetype/macos/lib"
     libs="-framework OpenGL -framework SDL2 -framework SDL2_mixer -lz -lbz2 -lfreetype"
     cflg="-std=c++14 -rpath @executable_path/Frameworks -Wall -Wno-missing-braces -Wno-unused-function -g" # @Incomplete: Always generating symbols right now...
@@ -48,7 +48,7 @@ if [ "${args[0]}" == "web" ]; then
     source ../../depends/emsdk/emsdk_env.sh
 
     defs="-D BUILD_WEB"
-    idir="-I ../../depends/nksdk/nklibs -I ../../depends/stb -I ../../source/engine"
+    idir="-I ../../depends/nksdk/nklibs -I ../../depends/stb -I ../../depends/imgui -I ../../source/engine"
     libs="-s WASM=1 -s USE_SDL=2 -s USE_SDL_MIXER=2 -s USE_OGG=1 -s USE_VORBIS=1 -s USE_FREETYPE=1 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 -lidbfs.js"
     cflg="-std=c++14"
     lflg=$"--preload-file ../../assets -s EXPORTED_FUNCTIONS=_main,_filesystem_ready -s EXPORTED_RUNTIME_METHODS=ccall -s ALLOW_MEMORY_GROWTH"
