@@ -28,6 +28,7 @@
 #include <wchar.h>
 
 #include "utility.hpp"
+#include "noise.hpp"
 #include "collision.hpp"
 #include "asset_manager.hpp"
 #include "audio.hpp"
@@ -43,6 +44,7 @@
 #include "application.hpp"
 
 #include "utility.cpp"
+#include "noise.cpp"
 #include "collision.cpp"
 #include "platform.cpp"
 #include "asset_manager.cpp"
