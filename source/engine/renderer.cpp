@@ -643,6 +643,8 @@ GLOBAL void draw_arrays(const VertexLayout& vertex_layout, nkU64 vertex_count)
 {
     NK_ASSERT(g_pass_started); // Cannot draw outside of a render pass!
 
+    if(vertex_count == 0) return;
+
     GLenum mode = DRAW_MODE_TO_GL[g_current_draw_mode];
     bind_vertex_layout(vertex_layout);
     glDrawArrays(mode, 0, NK_CAST(GLsizei,vertex_count));
@@ -651,6 +653,8 @@ GLOBAL void draw_arrays(const VertexLayout& vertex_layout, nkU64 vertex_count)
 GLOBAL void draw_elements(const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type, nkU64 byteOffset)
 {
     NK_ASSERT(g_pass_started); // Cannot draw outside of a render pass!
+
+    if(element_count == 0) return;
 
     GLenum type = ELEMENT_TYPE_TO_GL[element_type];
     GLenum mode = DRAW_MODE_TO_GL[g_current_draw_mode];
