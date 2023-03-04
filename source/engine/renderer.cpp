@@ -442,7 +442,7 @@ INTERNAL void bind_vertex_layout(const VertexLayout& vertex_layout)
         {
             GLenum type = ATTRIB_TYPE_TO_GL[attrib->type];
             glEnableVertexAttribArray(attrib->index);
-            glVertexAttribPointer(attrib->index, attrib->components, type, GL_FALSE,
+            glVertexAttribPointer(attrib->index, attrib->components, type, (type == GL_UNSIGNED_BYTE),
                 NK_CAST(GLsizei, vertex_layout.byte_stride), NK_CAST(const void*, attrib->byte_offset));
         }
         else
@@ -648,14 +648,14 @@ GLOBAL void draw_arrays(const VertexLayout& vertex_layout, nkU64 vertex_count)
     glDrawArrays(mode, 0, NK_CAST(GLsizei,vertex_count));
 }
 
-GLOBAL void draw_elements(const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type)
+GLOBAL void draw_elements(const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type, nkU64 byteOffset)
 {
     NK_ASSERT(g_pass_started); // Cannot draw outside of a render pass!
 
     GLenum type = ELEMENT_TYPE_TO_GL[element_type];
     GLenum mode = DRAW_MODE_TO_GL[g_current_draw_mode];
     bind_vertex_layout(vertex_layout);
-    glDrawElements(mode, NK_CAST(GLsizei,element_count), type, NULL);
+    glDrawElements(mode, NK_CAST(GLsizei,element_count), type, NK_CAST(void*,byteOffset));
 }
 
 // =============================================================================

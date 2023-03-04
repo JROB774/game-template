@@ -236,7 +236,7 @@ GLOBAL void       bind_buffer       (Buffer buffer, nkS32 slot = 0);
 GLOBAL void       bind_shader       (Shader shader);
 GLOBAL void       bind_texture      (Texture texture, Sampler sampler, nkS32 unit);
 GLOBAL void       draw_arrays       (const VertexLayout& vertex_layout, nkU64 vertex_count);
-GLOBAL void       draw_elements     (const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type);
+GLOBAL void       draw_elements     (const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type, nkU64 byteOffset = 0);
 // =============================================================================
 
 /*////////////////////////////////////////////////////////////////////////////*/
