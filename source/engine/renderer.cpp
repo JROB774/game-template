@@ -505,12 +505,22 @@ GLOBAL void begin_render_pass(RenderPass pass)
 
     glBindFramebuffer(GL_FRAMEBUFFER, pass->framebuffer);
 
-    // Clear the target.
+    // Clear the target(s).
     if(pass->desc.clear)
     {
-        // @Improve: Only clear necessary targets...
-        glClearColor(pass->desc.clear_color.r,pass->desc.clear_color.g,pass->desc.clear_color.b,pass->desc.clear_color.a);
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+        // @Todo: Implement multiple clear colors for all the color targets, depth target, and stencil target.
+        GLbitfield clear_mask = GL_NONE;
+
+        if(pass->desc.num_color_targets > 0) NK_SET_FLAGS(clear_mask, GL_COLOR_BUFFER_BIT);
+        if(pass->desc.depth_stencil_target) NK_SET_FLAGS(clear_mask, GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+
+        if(clear_mask != GL_NONE)
+        {
+            const nkVec4& c = pass->desc.clear_color;
+
+            glClearColor(c.r,c.g,c.b,c.a);
+            glClear(clear_mask);
+        }
     }
 
     // Setup depth read/write.
