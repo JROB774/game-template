@@ -542,11 +542,12 @@ GLOBAL void imm_rect_outline(nkF32 x, nkF32 y, nkF32 w, nkF32 h, nkVec4 color)
     nkF32 x2 = x1+w;
     nkF32 y2 = y1+h;
 
-    imm_begin(DrawMode_LineLoop);
+    imm_begin(DrawMode_LineStrip);
     imm_position(x1,y1); imm_color(color.x,color.y,color.z,color.w);
     imm_position(x2,y1); imm_color(color.x,color.y,color.z,color.w);
     imm_position(x2,y2); imm_color(color.x,color.y,color.z,color.w);
     imm_position(x1,y2); imm_color(color.x,color.y,color.z,color.w);
+    imm_position(x1,y1); imm_color(color.x,color.y,color.z,color.w);
     imm_end();
 }
 
@@ -567,30 +568,54 @@ GLOBAL void imm_rect_filled(nkF32 x, nkF32 y, nkF32 w, nkF32 h, nkVec4 color)
 
 GLOBAL void imm_circle_outline(nkF32 x, nkF32 y, nkF32 r, nkS32 n, nkVec4 color)
 {
-    imm_begin(DrawMode_LineLoop);
+    nkArray<nkVec2> points; // @Speed: Memory allocation and free for every call to this function.
+    nk_array_reserve(&points, n);
+
     for(nkS32 i=0; i<n; ++i)
     {
-        nkF32 theta = 2.0f * NK_TAU_F32 * NK_CAST(nkF32,i) / NK_CAST(nkF32,n);
+        nkF32 theta = NK_TAU_F32 * NK_CAST(nkF32,i) / NK_CAST(nkF32,n);
         nkF32 xx = r * cosf(theta);
         nkF32 yy = r * sinf(theta);
-        imm_position(xx+x,yy+y);
-        imm_color(color.x,color.y,color.z,color.w);
+        nk_array_append(&points, { x+xx,y+yy });
+    }
+
+    imm_begin(DrawMode_Lines);
+    for(nkU64 i=0; i<points.length; ++i)
+    {
+        nkU64 j = ((i+1) % points.length);
+        const nkVec2& a = points[i];
+        const nkVec2& b = points[j];
+        imm_position(a.x,a.y); imm_color(color.x,color.y,color.z,color.w);
+        imm_position(b.x,b.y); imm_color(color.x,color.y,color.z,color.w);
     }
     imm_end();
 }
 
 GLOBAL void imm_circle_filled(nkF32 x, nkF32 y, nkF32 r, nkS32 n, nkVec4 color)
 {
-    imm_begin(DrawMode_TriangleFan);
-    imm_position(x,y);
-    imm_color(color.x,color.y,color.z,color.w);
-    for(nkS32 i=0; i<=n; ++i)
+    nkArray<nkVec2> points; // @Speed: Memory allocation and free for every call to this function.
+    nk_array_reserve(&points, n);
+
+    nkVec2 center = { x,y };
+
+    for(nkS32 i=0; i<n; ++i)
     {
-        nkF32 theta = 2.0f * NK_TAU_F32 * NK_CAST(nkF32,i) / NK_CAST(nkF32,n);
+        nkF32 theta = NK_TAU_F32 * NK_CAST(nkF32,i) / NK_CAST(nkF32,n);
         nkF32 xx = r * cosf(theta);
         nkF32 yy = r * sinf(theta);
-        imm_position(xx+x,yy+y);
-        imm_color(color.x,color.y,color.z,color.w);
+        nk_array_append(&points, { x+xx,y+yy });
+    }
+
+    imm_begin(DrawMode_Triangles);
+    for(nkU64 i=0; i<points.length; ++i)
+    {
+        nkU64 j = ((i+1) % points.length);
+        const nkVec2& a = points[i];
+        const nkVec2& b = center;
+        const nkVec2& c = points[j];
+        imm_position(a.x,a.y); imm_color(color.x,color.y,color.z,color.w);
+        imm_position(b.x,b.y); imm_color(color.x,color.y,color.z,color.w);
+        imm_position(c.x,c.y); imm_color(color.x,color.y,color.z,color.w);
     }
     imm_end();
 }

@@ -137,12 +137,10 @@ DECLARE_PRIVATE_TYPE(RenderPass);
 NK_ENUM(DrawMode, nkS32)
 {
     DrawMode_Points,
-    DrawMode_LineStrip,
-    DrawMode_LineLoop,
     DrawMode_Lines,
-    DrawMode_TriangleStrip,
-    DrawMode_TriangleFan,
+    DrawMode_LineStrip,
     DrawMode_Triangles,
+    DrawMode_TriangleStrip,
     DrawMode_TOTAL
 };
 
