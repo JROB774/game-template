@@ -432,26 +432,6 @@ DEFINE_PRIVATE_TYPE(RenderPass)
     RenderPassDesc desc;
 };
 
-INTERNAL void bind_vertex_layout(const VertexLayout& vertex_layout)
-{
-    // Setup the vertex attributes using the provided layout.
-    for(nkS32 i=0; i<vertex_layout.attrib_count; ++i)
-    {
-        const VertexAttrib* attrib = &vertex_layout.attribs[i];
-        if(attrib->enabled)
-        {
-            GLenum type = ATTRIB_TYPE_TO_GL[attrib->type];
-            glEnableVertexAttribArray(attrib->index);
-            glVertexAttribPointer(attrib->index, attrib->components, type, (type == GL_UNSIGNED_BYTE),
-                NK_CAST(GLsizei, vertex_layout.byte_stride), NK_CAST(const void*, attrib->byte_offset));
-        }
-        else
-        {
-            glDisableVertexAttribArray(attrib->index);
-        }
-    }
-}
-
 GLOBAL RenderPass create_render_pass(const RenderPassDesc& desc)
 {
     RenderPass pass = ALLOCATE_PRIVATE_TYPE(RenderPass);
@@ -578,6 +558,30 @@ GLOBAL void end_render_pass(void)
 {
     NK_ASSERT(g_pass_started); // Render pass has not been started!
     g_pass_started = NK_FALSE;
+}
+
+// =============================================================================
+
+// Renderer ====================================================================
+
+INTERNAL void bind_vertex_layout(const VertexLayout& vertex_layout)
+{
+    // Setup the vertex attributes using the provided layout.
+    for(nkS32 i=0; i<vertex_layout.attrib_count; ++i)
+    {
+        const VertexAttrib* attrib = &vertex_layout.attribs[i];
+        if(attrib->enabled)
+        {
+            GLenum type = ATTRIB_TYPE_TO_GL[attrib->type];
+            glEnableVertexAttribArray(attrib->index);
+            glVertexAttribPointer(attrib->index, attrib->components, type, (type == GL_UNSIGNED_BYTE),
+                NK_CAST(GLsizei, vertex_layout.byte_stride), NK_CAST(const void*, attrib->byte_offset));
+        }
+        else
+        {
+            glDisableVertexAttribArray(attrib->index);
+        }
+    }
 }
 
 GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
