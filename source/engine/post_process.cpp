@@ -74,7 +74,7 @@ GLOBAL Texture perform_post_processing(Texture input)
         }
 
         imm_set_projection(nk_orthographic(0,iw,ih,0,-1,1));
-        imm_set_viewport({ 0.0f,0.0f,iw,ih });
+        imm_set_viewport(0.0f,0.0f,iw,ih);
 
         // Copy the input into the first target.
         imm_set_color_target(g_pp.targets[0]);
@@ -103,7 +103,7 @@ GLOBAL Texture perform_post_processing(Texture input)
             }
 
             imm_set_projection(nk_orthographic(0,dw,dh,0,-1,1));
-            imm_set_viewport({ 0.0f,0.0f,dw,dh });
+            imm_set_viewport(0.0f,0.0f,dw,dh);
             imm_set_color_target(dst);
             imm_set_texture(src,0);
             imm_set_sampler(effect.input_sampler,0);

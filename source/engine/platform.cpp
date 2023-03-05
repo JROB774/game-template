@@ -226,7 +226,7 @@ INTERNAL void end_render_frame(void)
         case ScreenMode_Fit:
         case ScreenMode_Stretch:
         {
-            imm_set_viewport({ 0.0f,0.0f,ww,wh });
+            imm_set_viewport(0.0f,0.0f,ww,wh);
             imm_set_color_target(BACKBUFFER);
             imm_set_texture(screen);
             imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));
@@ -256,7 +256,7 @@ INTERNAL void end_render_frame(void)
             nkF32 vx = (ww - vw) * 0.5f;
             nkF32 vy = (wh - vh) * 0.5f;
 
-            imm_set_viewport({ 0.0f,0.0f,ww,wh });
+            imm_set_viewport(0.0f,0.0f,ww,wh);
             imm_set_color_target(BACKBUFFER);
             imm_set_texture(screen);
             imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));
@@ -284,7 +284,7 @@ INTERNAL void end_render_frame(void)
             nkF32 vx = (ww - vw) * 0.5f;
             nkF32 vy = (wh - vh) * 0.5f;
 
-            imm_set_viewport({ 0.0f,0.0f,ww,wh });
+            imm_set_viewport(0.0f,0.0f,ww,wh);
             imm_set_color_target(BACKBUFFER);
             imm_set_texture(screen);
             imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));

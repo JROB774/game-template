@@ -29,7 +29,7 @@ GLOBAL void imm_set_uniforms    (void* data, nkU64 bytes, nkU32 slot); // Set so
 GLOBAL void imm_set_shader      (Shader shader);                       // Set a shader to use for rendering, set to NULL to use the built-in immediate mode shader.
 GLOBAL void imm_set_sampler     (Sampler sampler, nkS32 slot = 0);     // Set a sampler to use for rendering, set to NULL to use the built-in immediate mode sampler.
 GLOBAL void imm_set_texture     (Texture texture, nkS32 slot = 0);     // Set a texture to use for rendering, set to NULL for no texture to be used.
-GLOBAL void imm_set_viewport    (nkVec4 viewport);                     // Set the viewport rect to use for rendering.
+GLOBAL void imm_set_viewport    (nkF32 x, nkF32 y, nkF32 w, nkF32 h);  // Set the viewport rect to use for rendering.
 GLOBAL void imm_set_projection  (nkMat4 projection);                   // Set the projection matrix to use for rendering.
 GLOBAL void imm_set_view        (nkMat4 view);                         // Set the view matrix to use for rendering.
 GLOBAL void imm_set_model       (nkMat4 model);                        // Set the model matrix to use for rendering.
@@ -43,7 +43,7 @@ GLOBAL Texture imm_get_depth_target(void);            // Get the depth render ta
 GLOBAL Shader  imm_get_shader      (void);            // Get the shader currently in use.
 GLOBAL Sampler imm_get_sampler     (nkS32 slot = 0);  // Get the sampler currently in use.
 GLOBAL Texture imm_get_texture     (nkS32 slot = 0);  // Get the texture currently in use.
-GLOBAL nkVec4  imm_get_viewport    (void);            // Get the viewport currently in use.
+GLOBAL fRect   imm_get_viewport    (void);            // Get the viewport currently in use.
 GLOBAL nkMat4  imm_get_projection  (void);            // Get the projection matrix currently in use.
 GLOBAL nkMat4  imm_get_view        (void);            // Get the view matrix currently in use.
 GLOBAL nkMat4  imm_get_model       (void);            // Get the model matrix currently in use.

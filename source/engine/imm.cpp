@@ -49,7 +49,7 @@ struct ImmContext
     Shader             current_shader;
     Sampler            current_samplers[IMM_MAX_TEXTURES];
     Texture            current_textures[IMM_MAX_TEXTURES];
-    nkVec4             current_viewport;
+    fRect              current_viewport;
     nkMat4             current_projection;
     nkMat4             current_view;
     nkMat4             current_model;
@@ -173,7 +173,7 @@ GLOBAL void imm_reset(void)
     g_imm.current_color_target = NULL;
     g_imm.current_depth_target = NULL;
     g_imm.current_shader       = NULL;
-    g_imm.current_viewport     = NK_V4_ZERO;
+    g_imm.current_viewport     = { 0.0f,0.0f,ww,wh };
     g_imm.current_projection   = nk_orthographic(0,ww,wh,0,-1,1);
     g_imm.current_view         = nk_m4_identity();
     g_imm.current_model        = nk_m4_identity();
@@ -228,9 +228,9 @@ GLOBAL void imm_set_texture(Texture texture, nkS32 slot)
     g_imm.current_textures[slot] = texture;
 }
 
-GLOBAL void imm_set_viewport(nkVec4 viewport)
+GLOBAL void imm_set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
 {
-    g_imm.current_viewport = viewport;
+    g_imm.current_viewport = { x,y,w,h };
 }
 
 GLOBAL void imm_set_projection(nkMat4 projection)
@@ -289,7 +289,7 @@ GLOBAL Texture imm_get_texture(nkS32 slot)
     return g_imm.current_textures[slot];
 }
 
-GLOBAL nkVec4 imm_get_viewport(void)
+GLOBAL fRect imm_get_viewport(void)
 {
     return g_imm.current_viewport;
 }
@@ -379,7 +379,7 @@ GLOBAL void imm_end(void)
 {
     NK_ASSERT(g_imm.draw_started); // Cannot end a draw that has not been started!
 
-    set_viewport(g_imm.current_viewport.x, g_imm.current_viewport.y, g_imm.current_viewport.z, g_imm.current_viewport.w);
+    set_viewport(g_imm.current_viewport.x, g_imm.current_viewport.y, g_imm.current_viewport.w, g_imm.current_viewport.h);
 
     begin_render_pass(g_imm.render_pass);
 

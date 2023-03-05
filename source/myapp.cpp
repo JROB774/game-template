@@ -60,7 +60,7 @@ GLOBAL void app_draw(void)
     imm_clear(0.0f, 0.6f, 0.8f);
 
     imm_set_projection(nk_orthographic(0.0f,ww,wh,0.0f));
-    imm_set_viewport({ 0.0f,0.0f,ww,wh });
+    imm_set_viewport(0.0f,0.0f,ww,wh);
 
     imm_texture_ex(face, hw,hh, scale,scale, g_face_angle, NULL);
 
