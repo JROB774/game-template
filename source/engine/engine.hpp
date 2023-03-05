@@ -15,6 +15,7 @@
 #include <nk_array.h>
 #include <nk_string.h>
 #include <nk_hashmap.h>
+#include <nk_stack.h>
 #include <nk_defer.h>
 
 #include <stb_image.h>
@@ -38,6 +39,7 @@
 #include "animation.hpp"
 #include "renderer.hpp"
 #include "imm.hpp"
+#include "post_process.hpp"
 #include "debug_ui.hpp"
 #include "platform.hpp"
 #include "assets.hpp"
@@ -55,6 +57,7 @@
 #include "animation.cpp"
 #include "renderer.cpp"
 #include "imm.cpp"
+#include "post_process.cpp"
 #include "debug_ui.cpp"
 
 /*////////////////////////////////////////////////////////////////////////////*/

@@ -2,7 +2,7 @@
 
 NK_ENUM(ScreenMode, nkS32)
 {
-    ScreenMode_Window,       // We do not have a screen target, we just render directly into the window (default).
+    ScreenMode_Window,       // We do not have a screen target, we just render directly into the window (default) (will NOT work with post-prcoessing).
     ScreenMode_Fit,          // We have a screen target that resizes to match the current window size.
     ScreenMode_Stretch,      // We have a screen target that stretches to fit inside the window regardless of distortion.
     ScreenMode_Letterbox,    // We have a screen target that scales to fit the window, with letterboxing.

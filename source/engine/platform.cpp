@@ -200,11 +200,19 @@ INTERNAL void begin_render_frame(void)
 
 INTERNAL void end_render_frame(void)
 {
+    // Perform post-processing if there are effects to perform.
+    Texture screen = g_ctx.screen;
+    if((num_post_process_effects() > 0) && (g_ctx.app_desc.screen_mode != ScreenMode_Window))
+    {
+        screen = perform_post_processing(screen);
+    }
+
+    // Draw the screen to the window.
     nkF32 ww = NK_CAST(nkF32, get_window_width());
     nkF32 wh = NK_CAST(nkF32, get_window_height());
 
-    nkF32 sw = NK_CAST(nkF32, get_texture_width(g_ctx.screen));
-    nkF32 sh = NK_CAST(nkF32, get_texture_height(g_ctx.screen));
+    nkF32 sw = NK_CAST(nkF32, get_texture_width(screen));
+    nkF32 sh = NK_CAST(nkF32, get_texture_height(screen));
 
     imm_reset();
 
@@ -220,7 +228,7 @@ INTERNAL void end_render_frame(void)
         {
             imm_set_viewport({ 0.0f,0.0f,ww,wh });
             imm_set_color_target(BACKBUFFER);
-            imm_set_texture(g_ctx.screen);
+            imm_set_texture(screen);
             imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));
             imm_begin(DrawMode_TriangleStrip);
             imm_position(0.0f,  wh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
@@ -250,7 +258,7 @@ INTERNAL void end_render_frame(void)
 
             imm_set_viewport({ 0.0f,0.0f,ww,wh });
             imm_set_color_target(BACKBUFFER);
-            imm_set_texture(g_ctx.screen);
+            imm_set_texture(screen);
             imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));
             imm_begin(DrawMode_TriangleStrip);
             imm_position(vx,   vy+vh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
@@ -278,7 +286,7 @@ INTERNAL void end_render_frame(void)
 
             imm_set_viewport({ 0.0f,0.0f,ww,wh });
             imm_set_color_target(BACKBUFFER);
-            imm_set_texture(g_ctx.screen);
+            imm_set_texture(screen);
             imm_set_sampler(imm_get_def_sampler(g_ctx.app_desc.screen_filter));
             imm_begin(DrawMode_TriangleStrip);
             imm_position(vx,   vy+vh); imm_texcoord(0.0f,0.0f); imm_color(1.0f,1.0f,1.0f,1.0f);
@@ -320,6 +328,7 @@ INTERNAL void main_init(void)
     }
 
     init_render_system();
+    init_post_process_system();
     init_audio_system();
     init_asset_manager();
     init_truetype_font_system();
@@ -355,6 +364,7 @@ INTERNAL void main_quit(void)
     quit_input_system();
     quit_truetype_font_system();
     quit_audio_system();
+    quit_post_process_system();
     quit_render_system();
 
     SDL_free(g_ctx.base_path);
@@ -423,6 +433,7 @@ INTERNAL void main_loop(void)
     {
         update_input_state();
         begin_debug_ui_frame();
+        clear_post_process_effects(); // We clear effects before each tick.
         app_tick(dt);
         end_debug_ui_frame();
         reset_input_state();
