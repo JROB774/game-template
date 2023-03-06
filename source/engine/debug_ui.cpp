@@ -155,10 +155,12 @@ GLOBAL void init_debug_ui_system(void)
 
     ImGui::CreateContext();
 
-    SDL_Window* window = NK_CAST(SDL_Window*,get_window());
-    SDL_GLContext context = NK_CAST(SDL_GLContext,get_context());
-
-    ImGui_ImplSDL2_InitForOpenGL(window, context);
+    // NOTE: This is an internal function but we don't care, the rendering API specific
+    // ones all call this with NULL as the second parameter (except the SDL_Renderer one).
+    // So, we just call this at it's a bit more clear seeing as we aren't necessarily
+    // using a specific rendering API (it depends what platform we are working with).
+    //                                                             -Josh, 6th March 2023
+    ImGui_ImplSDL2_Init(NK_CAST(SDL_Window*,get_window()), NULL);
 
     ImGuiIO& io = ImGui::GetIO();
 

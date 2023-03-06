@@ -2,7 +2,6 @@
 
 GLOBAL nkChar* get_base_path     (void);
 GLOBAL void*   get_window        (void);
-GLOBAL void*   get_context       (void);
 GLOBAL void    terminate_app     (void);
 GLOBAL void    fatal_error       (const nkChar* fmt, ...);
 GLOBAL void    user_error        (const nkChar* fmt, ...);
