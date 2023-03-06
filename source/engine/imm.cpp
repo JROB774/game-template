@@ -36,11 +36,13 @@ struct ImmContext
     Buffer             vertex_buffer;
     Buffer             uniform_buffers[IMM_MAX_UNIFORMS];
     RenderPass         render_pass;
+    RenderPipeline     render_pipeline;
 
     Shader             default_shader;
     Sampler            default_samplers[ImmSampler_TOTAL];
 
     nkVec4             clear_color = NK_V4_BLACK;
+    nkBool             should_clear;
 
     DrawMode           current_draw_mode;
     Texture            current_color_target;
@@ -66,6 +68,7 @@ struct ImmContext
     nkU64              userdata3_count;
 
     nkBool             draw_started;
+    nkBool             pipeline_needs_rebuild;
     nkBool             pass_needs_rebuild;
 };
 
@@ -73,14 +76,14 @@ INTERNAL ImmContext g_imm;
 
 GLOBAL void imm_init(void)
 {
-    g_imm.vertex_layout.attribs[0] = { 0, AttribType_Float, 4, offsetof(ImmVertex, position ), NK_FALSE };
-    g_imm.vertex_layout.attribs[1] = { 1, AttribType_Float, 4, offsetof(ImmVertex, normal   ), NK_FALSE };
-    g_imm.vertex_layout.attribs[2] = { 2, AttribType_Float, 4, offsetof(ImmVertex, color    ), NK_FALSE };
-    g_imm.vertex_layout.attribs[3] = { 3, AttribType_Float, 4, offsetof(ImmVertex, texcoord ), NK_FALSE };
-    g_imm.vertex_layout.attribs[4] = { 4, AttribType_Float, 4, offsetof(ImmVertex, userdata0), NK_FALSE };
-    g_imm.vertex_layout.attribs[5] = { 5, AttribType_Float, 4, offsetof(ImmVertex, userdata1), NK_FALSE };
-    g_imm.vertex_layout.attribs[6] = { 6, AttribType_Float, 4, offsetof(ImmVertex, userdata2), NK_FALSE };
-    g_imm.vertex_layout.attribs[7] = { 7, AttribType_Float, 4, offsetof(ImmVertex, userdata3), NK_FALSE };
+    g_imm.vertex_layout.attribs[0] = { 0, AttribType_Float, 4, offsetof(ImmVertex, position ), NK_TRUE };
+    g_imm.vertex_layout.attribs[1] = { 1, AttribType_Float, 4, offsetof(ImmVertex, normal   ), NK_TRUE };
+    g_imm.vertex_layout.attribs[2] = { 2, AttribType_Float, 4, offsetof(ImmVertex, color    ), NK_TRUE };
+    g_imm.vertex_layout.attribs[3] = { 3, AttribType_Float, 4, offsetof(ImmVertex, texcoord ), NK_TRUE };
+    g_imm.vertex_layout.attribs[4] = { 4, AttribType_Float, 4, offsetof(ImmVertex, userdata0), NK_TRUE };
+    g_imm.vertex_layout.attribs[5] = { 5, AttribType_Float, 4, offsetof(ImmVertex, userdata1), NK_TRUE };
+    g_imm.vertex_layout.attribs[6] = { 6, AttribType_Float, 4, offsetof(ImmVertex, userdata2), NK_TRUE };
+    g_imm.vertex_layout.attribs[7] = { 7, AttribType_Float, 4, offsetof(ImmVertex, userdata3), NK_TRUE };
     g_imm.vertex_layout.attrib_count = 8;
     g_imm.vertex_layout.byte_stride = sizeof(ImmVertex);
 
@@ -131,6 +134,9 @@ GLOBAL void imm_quit(void)
     for(nkS32 i=0; i<IMM_MAX_UNIFORMS; ++i)
         free_buffer(g_imm.uniform_buffers[i]);
 
+    if(g_imm.render_pipeline)
+        free_render_pipeline(g_imm.render_pipeline);
+
     if(g_imm.render_pass)
         free_render_pass(g_imm.render_pass);
 }
@@ -151,7 +157,7 @@ GLOBAL void imm_clear(nkVec4 color)
 {
     // Do an empty render pass where we just clear the current render target.
     g_imm.clear_color = color;
-    imm_begin(DrawMode_Points, NK_TRUE); // Draw mode doesn't matter but we need to define it...
+    imm_begin(g_imm.current_draw_mode, NK_TRUE); // Draw mode doesn't matter but we need to define it...
     imm_end();
 }
 
@@ -186,6 +192,7 @@ GLOBAL void imm_reset(void)
 
     nk_array_clear(&g_imm.vertices);
 
+    g_imm.pipeline_needs_rebuild = NK_TRUE;
     g_imm.pass_needs_rebuild = NK_TRUE;
 }
 
@@ -213,7 +220,9 @@ GLOBAL void imm_set_uniforms(void* data, nkU64 bytes, nkU32 slot)
 
 GLOBAL void imm_set_shader(Shader shader)
 {
+    NK_ASSERT(!g_imm.draw_started); // Cannot change shader once a draw has started.
     g_imm.current_shader = shader;
+    g_imm.pipeline_needs_rebuild = NK_TRUE;
 }
 
 GLOBAL void imm_set_sampler(Sampler sampler, nkS32 slot)
@@ -250,12 +259,16 @@ GLOBAL void imm_set_model(nkMat4 model)
 
 GLOBAL void imm_set_depth_read(nkBool enable)
 {
+    NK_ASSERT(!g_imm.draw_started); // Cannot change depth state once a draw has started.
     g_imm.current_depth_read = enable;
+    g_imm.pipeline_needs_rebuild = NK_TRUE;
 }
 
 GLOBAL void imm_set_depth_write(nkBool enable)
 {
+    NK_ASSERT(!g_imm.draw_started); // Cannot change depth state once a draw has started.
     g_imm.current_depth_write = enable;
+    g_imm.pipeline_needs_rebuild = NK_TRUE;
 }
 
 // =============================================================================
@@ -340,9 +353,19 @@ GLOBAL void imm_begin(DrawMode draw_mode, nkBool should_clear)
 
     g_imm.draw_started = NK_TRUE;
 
-    if(g_imm.current_draw_mode != draw_mode)
+    if(g_imm.should_clear != should_clear)
         g_imm.pass_needs_rebuild = NK_TRUE;
+    g_imm.should_clear = should_clear;
+
+    if(g_imm.current_draw_mode != draw_mode)
+        g_imm.pipeline_needs_rebuild = NK_TRUE;
     g_imm.current_draw_mode = draw_mode;
+
+    // If the pass needs rebuilding then so does the pipeline...
+    if(g_imm.pass_needs_rebuild)
+    {
+        g_imm.pipeline_needs_rebuild = NK_TRUE;
+    }
 
     g_imm.position_count  = 0;
     g_imm.normal_count    = 0;
@@ -356,22 +379,38 @@ GLOBAL void imm_begin(DrawMode draw_mode, nkBool should_clear)
     // Rebuild the render pass if necessary, e.g. when some parameter has changed.
     if(g_imm.pass_needs_rebuild)
     {
+        g_imm.pass_needs_rebuild = NK_FALSE;
+
         if(g_imm.render_pass) free_render_pass(g_imm.render_pass);
 
         RenderPassDesc pass_desc;
         pass_desc.color_targets[0]     = g_imm.current_color_target;
         pass_desc.depth_stencil_target = g_imm.current_depth_target;
         pass_desc.num_color_targets    = 1;
-        pass_desc.draw_mode            = g_imm.current_draw_mode;
-        pass_desc.blend_mode           = BlendMode_Alpha;
-        pass_desc.cull_face            = CullFace_None;
-        pass_desc.depth_read           = g_imm.current_depth_read;
-        pass_desc.depth_write          = g_imm.current_depth_write;
-        pass_desc.clear                = should_clear;
+        pass_desc.clear                = g_imm.should_clear;
         pass_desc.clear_color          = g_imm.clear_color;
         g_imm.render_pass = create_render_pass(pass_desc);
+    }
 
-        g_imm.pass_needs_rebuild = NK_FALSE;
+    // Rebuild the render pipeline if necessary, e.g. when some parameter has changed.
+    if(g_imm.pipeline_needs_rebuild)
+    {
+        g_imm.pipeline_needs_rebuild = NK_FALSE;
+
+        if(g_imm.render_pipeline) free_render_pipeline(g_imm.render_pipeline);
+
+        Shader current_shader = ((g_imm.current_shader) ? g_imm.current_shader : g_imm.default_shader);
+
+        RenderPipelineDesc pipeline_desc;
+        pipeline_desc.vertex_layout = g_imm.vertex_layout;
+        pipeline_desc.render_pass   = g_imm.render_pass;
+        pipeline_desc.shader        = current_shader;
+        pipeline_desc.draw_mode     = g_imm.current_draw_mode;
+        pipeline_desc.blend_mode    = BlendMode_Alpha;
+        pipeline_desc.cull_face     = CullFace_None;
+        pipeline_desc.depth_read    = g_imm.current_depth_read;
+        pipeline_desc.depth_write   = g_imm.current_depth_write;
+        g_imm.render_pipeline = create_render_pipeline(pipeline_desc);
     }
 }
 
@@ -383,15 +422,6 @@ GLOBAL void imm_end(void)
 
     begin_render_pass(g_imm.render_pass);
 
-    g_imm.vertex_layout.attribs[0].enabled = (g_imm.position_count  > 0);
-    g_imm.vertex_layout.attribs[1].enabled = (g_imm.normal_count    > 0);
-    g_imm.vertex_layout.attribs[2].enabled = (g_imm.color_count     > 0);
-    g_imm.vertex_layout.attribs[3].enabled = (g_imm.texcoord_count  > 0);
-    g_imm.vertex_layout.attribs[4].enabled = (g_imm.userdata0_count > 0);
-    g_imm.vertex_layout.attribs[5].enabled = (g_imm.userdata1_count > 0);
-    g_imm.vertex_layout.attribs[6].enabled = (g_imm.userdata2_count > 0);
-    g_imm.vertex_layout.attribs[7].enabled = (g_imm.userdata3_count > 0);
-
     // Setup default samplers.
     for(nkS32 i=0; i<IMM_MAX_TEXTURES; ++i)
     {
@@ -399,15 +429,11 @@ GLOBAL void imm_end(void)
             g_imm.current_samplers[i] = g_imm.default_samplers[ImmSampler_ClampNearest];
     }
 
-    // Setup default shader.
-    if(!g_imm.current_shader)
-    {
-        g_imm.current_shader = g_imm.default_shader;
-    }
+    // Bind pipeline.
+    bind_pipeline(g_imm.render_pipeline);
 
-    // Bind data and shader.
+    // Bind data.
     bind_buffer(g_imm.vertex_buffer);
-    bind_shader(g_imm.current_shader);
 
     // Bind textures.
     nkBool use_texture = NK_FALSE;
@@ -432,11 +458,11 @@ GLOBAL void imm_end(void)
     }
 
     // Bind uniforms.
-    ImmUniform uniforms = NK_ZERO_MEM;
+    ImmUniform uniforms   = NK_ZERO_MEM;
     uniforms.u_projection = g_imm.current_projection;
-    uniforms.u_view = g_imm.current_view;
-    uniforms.u_model = g_imm.current_model;
-    uniforms.u_usetex = use_texture;
+    uniforms.u_view       = g_imm.current_view;
+    uniforms.u_model      = g_imm.current_model;
+    uniforms.u_usetex     = use_texture;
 
     g_imm.current_uniforms[0].data = &uniforms;
     g_imm.current_uniforms[0].size = sizeof(uniforms);
@@ -453,7 +479,7 @@ GLOBAL void imm_end(void)
     // Update data and draw.
     update_buffer(g_imm.vertex_buffer, g_imm.vertices.data, g_imm.position_count * sizeof(ImmVertex));
 
-    draw_arrays(g_imm.vertex_layout, g_imm.position_count);
+    draw_arrays(g_imm.position_count);
 
     end_render_pass();
 

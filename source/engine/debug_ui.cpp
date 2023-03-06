@@ -30,14 +30,15 @@ struct ImGuiUniforms
 
 struct ImGuiDrawData
 {
-    RenderPass   render_pass;
-    VertexLayout vertex_layout;
-    Buffer       vertex_buffer;
-    Buffer       index_buffer;
-    Buffer       uniform_buffer;
-    Shader       shader;
-    Texture      font_texture;
-    nkBool       initialized;
+    VertexLayout   vertex_layout;
+    RenderPass     render_pass;
+    RenderPipeline render_pipeline;
+    Buffer         vertex_buffer;
+    Buffer         index_buffer;
+    Buffer         uniform_buffer;
+    Shader         shader;
+    Texture        font_texture;
+    nkBool         initialized;
 };
 
 struct DebugUiContext
@@ -57,19 +58,8 @@ INTERNAL void create_draw_data_resources(ImGuiDrawData* draw_data)
 {
     NK_ASSERT(draw_data);
 
-    // Create the render pass.
-    RenderPassDesc rp;
-    rp.color_targets[0]     = BACKBUFFER;
-    rp.depth_stencil_target = NULL;
-    rp.num_color_targets    = 1;
-    rp.draw_mode            = DrawMode_Triangles;
-    rp.blend_mode           = BlendMode_Alpha;
-    rp.cull_face            = CullFace_None;
-    rp.depth_read           = NK_FALSE;
-    rp.depth_write          = NK_FALSE;
-    rp.clear                = NK_FALSE;
-
-    draw_data->render_pass = create_render_pass(rp);
+    // Load the shader.
+    draw_data->shader = asset_manager_load<Shader>("imgui.shader");
 
     // Create the vertex layout.
     draw_data->vertex_layout.attribs[0]   = { 0, AttribType_Float,        2, IM_OFFSETOF(ImDrawVert, pos), NK_TRUE };
@@ -77,6 +67,28 @@ INTERNAL void create_draw_data_resources(ImGuiDrawData* draw_data)
     draw_data->vertex_layout.attribs[2]   = { 2, AttribType_UnsignedByte, 4, IM_OFFSETOF(ImDrawVert, col), NK_TRUE };
     draw_data->vertex_layout.attrib_count = 3;
     draw_data->vertex_layout.byte_stride  = sizeof(ImDrawVert);
+
+    // Create the render pass.
+    RenderPassDesc pass;
+    pass.color_targets[0]     = BACKBUFFER;
+    pass.depth_stencil_target = NULL;
+    pass.num_color_targets    = 1;
+    pass.clear                = NK_FALSE;
+
+    draw_data->render_pass = create_render_pass(pass);
+
+    // Create the render pipeline.
+    RenderPipelineDesc pipe;
+    pipe.vertex_layout = draw_data->vertex_layout;
+    pipe.render_pass   = draw_data->render_pass;
+    pipe.shader        = draw_data->shader;
+    pipe.draw_mode     = DrawMode_Triangles;
+    pipe.blend_mode    = BlendMode_Alpha;
+    pipe.cull_face     = CullFace_None;
+    pipe.depth_read    = NK_FALSE;
+    pipe.depth_write   = NK_FALSE;
+
+    draw_data->render_pipeline = create_render_pipeline(pipe);
 
     // Create the buffers.
     BufferDesc vb;
@@ -100,9 +112,6 @@ INTERNAL void create_draw_data_resources(ImGuiDrawData* draw_data)
     draw_data->vertex_buffer  = create_buffer(vb);
     draw_data->index_buffer   = create_buffer(ib);
     draw_data->uniform_buffer = create_buffer(ub);
-
-    // Load the shader.
-    draw_data->shader = asset_manager_load<Shader>("imgui.shader");
 
     // Create the font atlas texture.
     ImGuiIO& io = ImGui::GetIO();
@@ -134,6 +143,7 @@ INTERNAL void destroy_draw_data_resources(ImGuiDrawData* draw_data)
     free_buffer(draw_data->uniform_buffer);
     free_buffer(draw_data->index_buffer);
     free_buffer(draw_data->vertex_buffer);
+    free_render_pipeline(draw_data->render_pipeline);
     free_render_pass(draw_data->render_pass);
 
     draw_data->initialized = NK_FALSE;
@@ -239,7 +249,8 @@ GLOBAL void render_debug_ui_frame(void)
 
     begin_render_pass(draw_data->render_pass);
 
-    bind_shader(draw_data->shader);
+    bind_pipeline(draw_data->render_pipeline);
+
     bind_buffer(draw_data->vertex_buffer);
     bind_buffer(draw_data->index_buffer);
     bind_buffer(draw_data->uniform_buffer);
@@ -285,7 +296,7 @@ GLOBAL void render_debug_ui_frame(void)
                 bind_texture(NK_CAST(Texture,pcmd->GetTexID()), imm_get_def_sampler(ImmSampler_ClampLinear), 0);
 
                 ElementType element_type = ((sizeof(ImDrawIdx) == 2) ? ElementType_UnsignedShort : ElementType_UnsignedInt);
-                draw_elements(draw_data->vertex_layout, pcmd->ElemCount, element_type, pcmd->IdxOffset * sizeof(ImDrawIdx));
+                draw_elements(pcmd->ElemCount, element_type, pcmd->IdxOffset * sizeof(ImDrawIdx));
 
                 end_scissor();
             }

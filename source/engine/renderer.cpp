@@ -52,9 +52,15 @@ INTERNAL constexpr OpenGLTextureFormat TEXTURE_FORMAT_TO_GL[] =
 
 NK_STATIC_ASSERT(NK_ARRAY_SIZE(TEXTURE_FORMAT_TO_GL) == TextureFormat_TOTAL, texture_format_size_mismatch);
 
-INTERNAL nkBool   g_pass_started;
-INTERNAL DrawMode g_current_draw_mode;
-INTERNAL GLuint   g_vao;
+struct OpenGLContext
+{
+    GLuint        vertex_array_object;
+    nkBool        pass_started;
+    DrawMode      current_draw_mode;
+    VertexLayout* current_vertex_layout;
+};
+
+INTERNAL OpenGLContext g_ogl;
 
 // On Windows we also enable the debug callback. We can't/don't do this on MacOS or the web build because
 // they do not support OpenGL versions that have access to the debug callback unfortunately. On those
@@ -99,17 +105,17 @@ GLOBAL void init_render_system(void)
     glDebugMessageCallback(opengl_debug_callback, NULL);
     #endif // BUILD_DEBUG && NK_OS_WIN32
 
-    // We need one Vertex Attribute Object in order to render with modern OpenGL.
+    // We need one Vertex Array Object in order to render with modern OpenGL.
     #if defined(BUILD_NATIVE)
-    glGenVertexArrays(1, &g_vao);
-    glBindVertexArray(g_vao);
+    glGenVertexArrays(1, &g_ogl.vertex_array_object);
+    glBindVertexArray(g_ogl.vertex_array_object);
     #endif // BUILD_NATIVE
 }
 
 GLOBAL void quit_render_system(void)
 {
     #if defined(BUILD_NATIVE)
-    glDeleteVertexArrays(1, &g_vao);
+    glDeleteVertexArrays(1, &g_ogl.vertex_array_object);
     #endif // BUILD_NATIVE
 }
 
@@ -178,18 +184,11 @@ GLOBAL void update_buffer(Buffer buffer, void* data, nkU64 bytes)
 
 // Shader ======================================================================
 
-struct Uniform
-{
-    nkS32       location;
-    nkS32       binding;
-    UniformType type;
-};
-
 DEFINE_PRIVATE_TYPE(Shader)
 {
-    GLenum  program;
-    Uniform uniforms[32];
-    nkU64   uniform_count;
+    GLenum      program;
+    UniformDesc uniforms[32];
+    nkU64       uniform_count;
 };
 
 INTERNAL GLuint compile_shader(void* data, nkU64 bytes, GLenum type)
@@ -267,30 +266,9 @@ GLOBAL Shader create_shader(const ShaderDesc& desc)
         }
     }
 
-    // Build a map of all the shader uniform.
-    if(shader->program)
-    {
-        for(nkU64 i=0; i<desc.uniform_count; ++i)
-        {
-            const UniformDesc& udesc = desc.uniforms[i];
-            Uniform& u = shader->uniforms[i];
-
-            u.type = udesc.type;
-
-            if(udesc.type == UniformType_Buffer)
-            {
-                u.location = glGetUniformBlockIndex(shader->program, udesc.name.cstr);
-                u.binding = udesc.bind;
-            }
-            if(udesc.type == UniformType_Texture)
-            {
-                u.location = glGetUniformLocation(shader->program, udesc.name.cstr);
-                u.binding = udesc.bind;
-            }
-
-            shader->uniform_count++;
-        }
-    }
+    for(nkU64 i=0; i<desc.uniform_count; ++i)
+        shader->uniforms[i] = desc.uniforms[i];
+    shader->uniform_count = desc.uniform_count;
 
     return shader;
 }
@@ -479,9 +457,9 @@ GLOBAL void free_render_pass(RenderPass pass)
 
 GLOBAL void begin_render_pass(RenderPass pass)
 {
-    NK_ASSERT(!g_pass_started); // Render pass is already in progress!
+    NK_ASSERT(!g_ogl.pass_started); // Render pass is already in progress!
 
-    g_pass_started = NK_TRUE;
+    g_ogl.pass_started = NK_TRUE;
 
     glBindFramebuffer(GL_FRAMEBUFFER, pass->framebuffer);
 
@@ -502,87 +480,76 @@ GLOBAL void begin_render_pass(RenderPass pass)
             glClear(clear_mask);
         }
     }
-
-    // Setup depth read/write.
-    if(pass->desc.depth_read) glEnable(GL_DEPTH_TEST);
-    else glDisable(GL_DEPTH_TEST);
-    glDepthMask(pass->desc.depth_write);
-    GLenum depth_func = DEPTH_OP_TO_GL[pass->desc.depth_op];
-    glDepthFunc(depth_func);
-
-    // Setup cull face mode.
-    switch(pass->desc.cull_face)
-    {
-        case CullFace_None:
-        {
-            glDisable(GL_CULL_FACE);
-        } break;
-        case CullFace_Front:
-        {
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT);
-        } break;
-        case CullFace_Back:
-        {
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
-        } break;
-    }
-
-    // Setup blend mode.
-    switch(pass->desc.blend_mode)
-    {
-        case BlendMode_None:
-        {
-            glDisable(GL_BLEND);
-        } break;
-        case BlendMode_Alpha:
-        {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendEquation(GL_FUNC_ADD);
-            glEnable(GL_BLEND);
-        } break;
-        case BlendMode_PremultipliedAlpha:
-        {
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendEquation(GL_FUNC_ADD);
-            glEnable(GL_BLEND);
-        } break;
-    }
-
-    // Set the draw mode.
-    g_current_draw_mode = pass->desc.draw_mode;
 }
 
 GLOBAL void end_render_pass(void)
 {
-    NK_ASSERT(g_pass_started); // Render pass has not been started!
-    g_pass_started = NK_FALSE;
+    NK_ASSERT(g_ogl.pass_started); // Render pass has not been started!
+    g_ogl.pass_started = NK_FALSE;
+}
+
+// =============================================================================
+
+// Render Pipeline =============================================================
+
+struct Uniform
+{
+    nkS32       location;
+    nkS32       binding;
+    UniformType type;
+};
+
+DEFINE_PRIVATE_TYPE(RenderPipeline)
+{
+    RenderPipelineDesc desc;
+    Uniform            uniforms[32];
+    nkU64              uniform_count;
+};
+
+GLOBAL RenderPipeline create_render_pipeline(const RenderPipelineDesc& desc)
+{
+    RenderPipeline pipeline = ALLOCATE_PRIVATE_TYPE(RenderPipeline);
+    if(!pipeline) fatal_error("Failed to allocate render pipeline!");
+
+    pipeline->desc = desc;
+
+    // Build a map of all the shader uniform.
+    if(desc.shader)
+    {
+        for(nkU64 i=0; i<desc.shader->uniform_count; ++i)
+        {
+            const UniformDesc& udesc = desc.shader->uniforms[i];
+            Uniform& u = pipeline->uniforms[i];
+
+            u.type = udesc.type;
+
+            if(udesc.type == UniformType_Buffer)
+            {
+                u.location = glGetUniformBlockIndex(desc.shader->program, udesc.name.cstr);
+                u.binding = udesc.bind;
+            }
+            if(udesc.type == UniformType_Texture)
+            {
+                u.location = glGetUniformLocation(desc.shader->program, udesc.name.cstr);
+                u.binding = udesc.bind;
+            }
+
+            pipeline->uniform_count++;
+        }
+    }
+
+    return pipeline;
+}
+
+GLOBAL void free_render_pipeline(RenderPipeline pipeline)
+{
+    NK_ASSERT(pipeline);
+    NK_FREE(pipeline);
 }
 
 // =============================================================================
 
 // Renderer ====================================================================
-
-INTERNAL void bind_vertex_layout(const VertexLayout& vertex_layout)
-{
-    // Setup the vertex attributes using the provided layout.
-    for(nkS32 i=0; i<vertex_layout.attrib_count; ++i)
-    {
-        const VertexAttrib* attrib = &vertex_layout.attribs[i];
-        if(attrib->enabled)
-        {
-            GLenum type = ATTRIB_TYPE_TO_GL[attrib->type];
-            glEnableVertexAttribArray(attrib->index);
-            glVertexAttribPointer(attrib->index, attrib->components, type, (type == GL_UNSIGNED_BYTE),
-                NK_CAST(GLsizei, vertex_layout.byte_stride), NK_CAST(const void*, attrib->byte_offset));
-        }
-        else
-        {
-            glDisableVertexAttribArray(attrib->index);
-        }
-    }
-}
 
 GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
 {
@@ -610,41 +577,115 @@ GLOBAL void end_scissor(void)
     glDisable(GL_SCISSOR_TEST);
 }
 
+GLOBAL void bind_pipeline(RenderPipeline pipeline)
+{
+    NK_ASSERT(g_ogl.pass_started); // Cannot bind outside of a render pass!
+    NK_ASSERT(pipeline);
+    NK_ASSERT(pipeline->desc.shader);
+
+    // Bind the current shader and setup the uniform bindings.
+    glUseProgram(pipeline->desc.shader->program);
+
+    // Setup unifrom bindings.
+    for (nkU64 i = 0; i < pipeline->uniform_count; ++i)
+    {
+        const Uniform& u = pipeline->uniforms[i];
+
+        if (u.type == UniformType_Buffer)
+        {
+            glUniformBlockBinding(pipeline->desc.shader->program, u.location, u.binding);
+        }
+        if (u.type == UniformType_Texture)
+        {
+            glUniform1i(u.location, u.binding);
+        }
+    }
+
+    // Setup depth read/write.
+    if(pipeline->desc.depth_read) glEnable(GL_DEPTH_TEST);
+    else glDisable(GL_DEPTH_TEST);
+    glDepthMask(pipeline->desc.depth_write);
+    GLenum depth_func = DEPTH_OP_TO_GL[pipeline->desc.depth_op];
+    glDepthFunc(depth_func);
+
+    // Setup cull face mode.
+    switch(pipeline->desc.cull_face)
+    {
+        case CullFace_None:
+        {
+            glDisable(GL_CULL_FACE);
+        } break;
+        case CullFace_Front:
+        {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
+        } break;
+        case CullFace_Back:
+        {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+        } break;
+    }
+
+    // Setup blend mode.
+    switch(pipeline->desc.blend_mode)
+    {
+        case BlendMode_None:
+        {
+            glDisable(GL_BLEND);
+        } break;
+        case BlendMode_Alpha:
+        {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
+            glEnable(GL_BLEND);
+        } break;
+        case BlendMode_PremultipliedAlpha:
+        {
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
+            glEnable(GL_BLEND);
+        } break;
+    }
+
+    // Set the draw mode.
+    g_ogl.current_vertex_layout = &pipeline->desc.vertex_layout;
+    g_ogl.current_draw_mode = pipeline->desc.draw_mode;
+}
+
 GLOBAL void bind_buffer(Buffer buffer, nkS32 slot)
 {
-    NK_ASSERT(g_pass_started); // Cannot bind outside of a render pass!
+    NK_ASSERT(g_ogl.pass_started); // Cannot bind outside of a render pass!
     NK_ASSERT(buffer);
 
     if(buffer->type != GL_UNIFORM_BUFFER) glBindBuffer(buffer->type, buffer->handle);
     else glBindBufferBase(buffer->type, slot, buffer->handle);
-}
 
-GLOBAL void bind_shader(Shader shader)
-{
-    NK_ASSERT(g_pass_started); // Cannot bind outside of a render pass!
-    NK_ASSERT(shader);
-
-    glUseProgram(shader->program);
-
-    // Setup unifrom bindings.
-    for(nkU64 i=0; i<shader->uniform_count; ++i)
+    // Setup the attributes for the buffer.
+    if(buffer->type == GL_ARRAY_BUFFER && g_ogl.current_vertex_layout)
     {
-        const Uniform& u = shader->uniforms[i];
-
-        if(u.type == UniformType_Buffer)
+        // Setup the vertex layout attributes.
+        for(nkS32 i=0; i<g_ogl.current_vertex_layout->attrib_count; ++i)
         {
-            glUniformBlockBinding(shader->program, u.location, u.binding);
-        }
-        if(u.type == UniformType_Texture)
-        {
-            glUniform1i(u.location, u.binding);
+            const VertexAttrib* attrib = &g_ogl.current_vertex_layout->attribs[i];
+            if(attrib->enabled)
+            {
+                GLenum type = ATTRIB_TYPE_TO_GL[attrib->type];
+                glEnableVertexAttribArray(attrib->index);
+                glVertexAttribPointer(attrib->index, attrib->components, type, (type == GL_UNSIGNED_BYTE),
+                    NK_CAST(GLsizei, g_ogl.current_vertex_layout->byte_stride), NK_CAST(const void*, attrib->byte_offset));
+            }
+            else
+            {
+                glDisableVertexAttribArray(attrib->index);
+            }
         }
     }
 }
 
 GLOBAL void bind_texture(Texture texture, Sampler sampler, nkS32 unit)
 {
-    NK_ASSERT(g_pass_started); // Cannot bind outside of a render pass!
+    NK_ASSERT(g_ogl.pass_started); // Cannot bind outside of a render pass!
     NK_ASSERT(texture);
 
     glActiveTexture(GL_TEXTURE0+unit);
@@ -653,26 +694,24 @@ GLOBAL void bind_texture(Texture texture, Sampler sampler, nkS32 unit)
     else glBindSampler(unit, GL_NONE);
 }
 
-GLOBAL void draw_arrays(const VertexLayout& vertex_layout, nkU64 vertex_count)
+GLOBAL void draw_arrays(nkU64 vertex_count)
 {
-    NK_ASSERT(g_pass_started); // Cannot draw outside of a render pass!
+    NK_ASSERT(g_ogl.pass_started); // Cannot draw outside of a render pass!
 
     if(vertex_count == 0) return;
 
-    GLenum mode = DRAW_MODE_TO_GL[g_current_draw_mode];
-    bind_vertex_layout(vertex_layout);
+    GLenum mode = DRAW_MODE_TO_GL[g_ogl.current_draw_mode];
     glDrawArrays(mode, 0, NK_CAST(GLsizei,vertex_count));
 }
 
-GLOBAL void draw_elements(const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type, nkU64 byteOffset)
+GLOBAL void draw_elements(nkU64 element_count, ElementType element_type, nkU64 byteOffset)
 {
-    NK_ASSERT(g_pass_started); // Cannot draw outside of a render pass!
+    NK_ASSERT(g_ogl.pass_started); // Cannot draw outside of a render pass!
 
     if(element_count == 0) return;
 
+    GLenum mode = DRAW_MODE_TO_GL[g_ogl.current_draw_mode];
     GLenum type = ELEMENT_TYPE_TO_GL[element_type];
-    GLenum mode = DRAW_MODE_TO_GL[g_current_draw_mode];
-    bind_vertex_layout(vertex_layout);
     glDrawElements(mode, NK_CAST(GLsizei,element_count), type, NK_CAST(void*,byteOffset));
 }
 

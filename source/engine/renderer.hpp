@@ -134,6 +134,24 @@ INTERNAL constexpr Texture BACKBUFFER = NULL;
 
 DECLARE_PRIVATE_TYPE(RenderPass);
 
+struct RenderPassDesc
+{
+    Texture color_targets[16]    = { BACKBUFFER };
+    Texture depth_stencil_target = NULL;
+    nkU32   num_color_targets    = 1;
+    nkBool  clear                = NK_FALSE;
+    nkVec4  clear_color          = NK_V4_BLACK;
+};
+
+GLOBAL RenderPass create_render_pass(const RenderPassDesc& desc);
+GLOBAL void       free_render_pass  (RenderPass pass);
+GLOBAL void       begin_render_pass (RenderPass pass);
+GLOBAL void       end_render_pass   (void);
+// =============================================================================
+
+// Render Pipeline =============================================================
+DECLARE_PRIVATE_TYPE(RenderPipeline);
+
 NK_ENUM(DrawMode, nkS32)
 {
     DrawMode_Points,
@@ -174,28 +192,6 @@ NK_ENUM(DepthOp, nkS32)
     DepthOp_TOTAL
 };
 
-struct RenderPassDesc
-{
-    Texture      color_targets[16]    = { BACKBUFFER };
-    Texture      depth_stencil_target = NULL;
-    nkU32        num_color_targets    = 1;
-    DrawMode     draw_mode            = DrawMode_Triangles;
-    BlendMode    blend_mode           = BlendMode_None;
-    CullFace     cull_face            = CullFace_Back;
-    DepthOp      depth_op             = DepthOp_Less;
-    nkBool       depth_read           = NK_TRUE;
-    nkBool       depth_write          = NK_TRUE;
-    nkBool       clear                = NK_FALSE;
-    nkVec4       clear_color          = NK_V4_BLACK;
-};
-
-GLOBAL RenderPass create_render_pass(const RenderPassDesc& desc);
-GLOBAL void       free_render_pass  (RenderPass pass);
-GLOBAL void       begin_render_pass (RenderPass pass);
-GLOBAL void       end_render_pass   (void);
-// =============================================================================
-
-// Renderer ====================================================================
 NK_ENUM(ElementType, nkS32)
 {
     ElementType_UnsignedByte,
@@ -230,14 +226,32 @@ struct VertexLayout
     nkU64        byte_stride  = 0;
 };
 
+struct RenderPipelineDesc
+{
+    VertexLayout vertex_layout;
+    RenderPass   render_pass = NULL;
+    Shader       shader      = NULL;
+    DrawMode     draw_mode   = DrawMode_Triangles;
+    BlendMode    blend_mode  = BlendMode_None;
+    CullFace     cull_face   = CullFace_Back;
+    DepthOp      depth_op    = DepthOp_Less;
+    nkBool       depth_read  = NK_TRUE;
+    nkBool       depth_write = NK_TRUE;
+};
+
+GLOBAL RenderPipeline create_render_pipeline(const RenderPipelineDesc& desc);
+GLOBAL void           free_render_pipeline  (RenderPipeline pipeline);
+// =============================================================================
+
+// Renderer ====================================================================
 GLOBAL void set_viewport (nkF32 x, nkF32 y, nkF32 w, nkF32 h);
 GLOBAL void begin_scissor(nkF32 x, nkF32 y, nkF32 w, nkF32 h);
 GLOBAL void end_scissor  (void);
+GLOBAL void bind_pipeline(RenderPipeline pipeline);
 GLOBAL void bind_buffer  (Buffer buffer, nkS32 slot = 0);
-GLOBAL void bind_shader  (Shader shader);
 GLOBAL void bind_texture (Texture texture, Sampler sampler, nkS32 unit);
-GLOBAL void draw_arrays  (const VertexLayout& vertex_layout, nkU64 vertex_count);
-GLOBAL void draw_elements(const VertexLayout& vertex_layout, nkU64 element_count, ElementType element_type, nkU64 byteOffset = 0);
+GLOBAL void draw_arrays  (nkU64 vertex_count);
+GLOBAL void draw_elements(nkU64 element_count, ElementType element_type, nkU64 byteOffset = 0);
 // =============================================================================
 
 /*////////////////////////////////////////////////////////////////////////////*/
