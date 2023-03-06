@@ -91,7 +91,11 @@ void asset_free<Shader>(Asset<Shader>& asset)
 template<>
 const nkChar* asset_path<Shader>(void)
 {
-    return "shaders/";
+    #if defined(NK_OS_WIN32)
+    return "shaders/hlsl/";
+    #else
+    return "shaders/glsl/";
+    #endif
 }
 
 // Texture
