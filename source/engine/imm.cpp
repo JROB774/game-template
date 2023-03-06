@@ -664,7 +664,7 @@ GLOBAL void imm_end_texture_batch(void)
 
 GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmClip* clip, nkVec4 color)
 {
-    NK_ASSERT(tex); // Need to specify an actual texture for drawing!
+    if(!tex) return; // Can't do anything if we're not actually given a texture... // @Improve: Log a warning?
 
     nkF32 w = NK_CAST(nkF32,get_texture_width(tex));
     nkF32 h = NK_CAST(nkF32,get_texture_height(tex));
@@ -703,7 +703,7 @@ GLOBAL void imm_texture(Texture tex, nkF32 x, nkF32 y, const ImmClip* clip, nkVe
 
 GLOBAL void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmClip* clip, nkVec4 color)
 {
-    NK_ASSERT(tex); // Need to specify an actual texture for drawing!
+    if(!tex) return; // Can't do anything if we're not actually given a texture... // @Improve: Log a warning?
 
     nkF32 w = NK_CAST(nkF32,get_texture_width(tex));
     nkF32 h = NK_CAST(nkF32,get_texture_height(tex));
@@ -762,7 +762,7 @@ GLOBAL void imm_texture_ex(Texture tex, nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nk
 
 GLOBAL void imm_texture_batched(nkF32 x, nkF32 y, const ImmClip* clip, nkVec4 color)
 {
-    NK_ASSERT(g_imm.current_textures[0]); // Need to call imm_begin_texture_batch first!
+    if(!g_imm.current_textures[0]) return; // Need to call imm_begin_texture_batch first! // @Improve: Log a warning?
 
     nkF32 w = NK_CAST(nkF32, get_texture_width(g_imm.current_textures[0]));
     nkF32 h = NK_CAST(nkF32, get_texture_height(g_imm.current_textures[0]));
@@ -800,7 +800,7 @@ GLOBAL void imm_texture_batched(nkF32 x, nkF32 y, const ImmClip* clip, nkVec4 co
 
 GLOBAL void imm_texture_batched_ex(nkF32 x, nkF32 y, nkF32 sx, nkF32 sy, nkF32 angle, nkVec2* anchor, const ImmClip* clip, nkVec4 color)
 {
-    NK_ASSERT(g_imm.current_textures[0]); // Need to call imm_begin_texture_batch first!
+    if(!g_imm.current_textures[0]) return; // Need to call imm_begin_texture_batch first! // @Improve: Log a warning?
 
     nkF32 w = NK_CAST(nkF32, get_texture_width(g_imm.current_textures[0]));
     nkF32 h = NK_CAST(nkF32, get_texture_height(g_imm.current_textures[0]));
