@@ -41,9 +41,9 @@
 #include "imm.hpp"
 #include "post_process.hpp"
 #include "debug_ui.hpp"
-#include "platform.hpp"
 #include "assets.hpp"
 #include "application.hpp"
+#include "platform.hpp"
 
 #include "utility.cpp"
 #include "noise.cpp"

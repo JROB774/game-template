@@ -544,6 +544,11 @@ int main(int argc, char** argv)
 
 /*////////////////////////////////////////////////////////////////////////////*/
 
+GLOBAL AppDesc* get_app_desc(void)
+{
+    return &g_ctx.app_desc;
+}
+
 GLOBAL nkChar* get_base_path(void)
 {
     return g_ctx.base_path;
