@@ -1,31 +1,25 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-#include <SDL_syswm.h> // For getting the HWND from the SDL window.
-
-#include <d3d11.h>
-#include <d3dcompiler.h>
-
 // Buffer ======================================================================
 
 DEFINE_PRIVATE_TYPE(Buffer)
 {
-    // @Incomplete: ...
+    // Nothing...
 };
 
 GLOBAL Buffer create_buffer(const BufferDesc& desc)
 {
-    // @Incomplete: ...
     return NULL;
 }
 
 GLOBAL void free_buffer(Buffer buffer)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void update_buffer(Buffer buffer, void* data, nkU64 bytes)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 // =============================================================================
@@ -34,18 +28,17 @@ GLOBAL void update_buffer(Buffer buffer, void* data, nkU64 bytes)
 
 DEFINE_PRIVATE_TYPE(Shader)
 {
-    // @Incomplete: ...
+    // Nothing...
 };
 
 GLOBAL Shader create_shader(const ShaderDesc& desc)
 {
-    // @Incomplete: ...
     return NULL;
 }
 
 GLOBAL void free_shader(Shader shader)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 // =============================================================================
@@ -54,18 +47,17 @@ GLOBAL void free_shader(Shader shader)
 
 DEFINE_PRIVATE_TYPE(Sampler)
 {
-    // @Incomplete: ...
+    // Nothing...
 };
 
 GLOBAL Sampler create_sampler(const SamplerDesc& desc)
 {
-    // @Incomplete: ...
     return NULL;
 }
 
 GLOBAL void free_sampler(Sampler sampler)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 // =============================================================================
@@ -74,40 +66,36 @@ GLOBAL void free_sampler(Sampler sampler)
 
 DEFINE_PRIVATE_TYPE(Texture)
 {
-    // @Incomplete: ...
+    // Nothing...
 };
 
 GLOBAL Texture create_texture(const TextureDesc& desc)
 {
-    // @Incomplete: ...
     return NULL;
 }
 
 GLOBAL void free_texture(Texture texture)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void resize_texture(Texture texture, nkS32 width, nkS32 height)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL iPoint get_texture_size(Texture texture)
 {
-    // @Incomplete: ...
     return { 0,0 };
 }
 
 GLOBAL nkS32 get_texture_width(Texture texture)
 {
-    // @Incomplete: ...
     return 0;
 }
 
 GLOBAL nkS32 get_texture_height(Texture texture)
 {
-    // @Incomplete: ...
     return 0;
 }
 
@@ -117,28 +105,27 @@ GLOBAL nkS32 get_texture_height(Texture texture)
 
 DEFINE_PRIVATE_TYPE(RenderPass)
 {
-    // @Incomplete: ...
+    // Nothing...
 };
 
 GLOBAL RenderPass create_render_pass(const RenderPassDesc& desc)
 {
-    // @Incomplete: ...
     return NULL;
 }
 
 GLOBAL void free_render_pass(RenderPass pass)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void begin_render_pass(RenderPass pass)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void end_render_pass(void)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 // =============================================================================
@@ -147,18 +134,17 @@ GLOBAL void end_render_pass(void)
 
 DEFINE_PRIVATE_TYPE(RenderPipeline)
 {
-    // @Incomplete: ...
+    // Nothing...
 };
 
 GLOBAL RenderPipeline create_render_pipeline(const RenderPipelineDesc& desc)
 {
-    // @Incomplete: ...
     return NULL;
 }
 
 GLOBAL void free_render_pipeline(RenderPipeline pipeline)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 // =============================================================================
@@ -167,69 +153,67 @@ GLOBAL void free_render_pipeline(RenderPipeline pipeline)
 
 GLOBAL void setup_renderer_platform(void)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void init_render_system(void)
 {
-    printf("[Direct3D]: Initializing System\n");
-
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void quit_render_system(void)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void maybe_resize_backbuffer(void)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void present_renderer(void)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void begin_scissor(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void end_scissor(void)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void bind_pipeline(RenderPipeline pipeline)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void bind_buffer(Buffer buffer, nkS32 slot)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void bind_texture(Texture texture, Sampler sampler, nkS32 unit)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void draw_arrays(nkU64 vertex_count)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 GLOBAL void draw_elements(nkU64 element_count, ElementType element_type, nkU64 byteOffset)
 {
-    // @Incomplete: ...
+    // Nothing...
 }
 
 // =============================================================================

@@ -1,12 +1,15 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
-GLOBAL void init_render_system     (void);
-GLOBAL void quit_render_system     (void);
-GLOBAL void setup_renderer_platform(void);
+DECLARE_PRIVATE_TYPE(        Buffer);
+DECLARE_PRIVATE_TYPE(        Shader);
+DECLARE_PRIVATE_TYPE(       Sampler);
+DECLARE_PRIVATE_TYPE(       Texture);
+DECLARE_PRIVATE_TYPE(    RenderPass);
+DECLARE_PRIVATE_TYPE(RenderPipeline);
 
-// Buffer ======================================================================
-DECLARE_PRIVATE_TYPE(Buffer);
+INTERNAL constexpr Texture BACKBUFFER = NULL;
 
+// Enumerators =================================================================
 NK_ENUM(BufferType, nkS32)
 {
     BufferType_Vertex,
@@ -23,50 +26,12 @@ NK_ENUM(BufferUsage, nkS32)
     BufferUsage_TOTAL
 };
 
-struct BufferDesc
-{
-    BufferType  type  = BufferType_Vertex;
-    BufferUsage usage = BufferUsage_Static;
-    void*       data  = NULL;
-    nkU64       bytes = 0;
-};
-
-GLOBAL Buffer create_buffer(const BufferDesc& desc);
-GLOBAL void   free_buffer  (Buffer buffer);
-GLOBAL void   update_buffer(Buffer buffer, void* data, nkU64 bytes);
-// =============================================================================
-
-// Shader ======================================================================
-DECLARE_PRIVATE_TYPE(Shader);
-
 NK_ENUM(UniformType, nkS32)
 {
     UniformType_Buffer,
     UniformType_Texture,
     UniformType_TOTAL
 };
-
-struct UniformDesc
-{
-    nkString    name;
-    UniformType type = UniformType_Buffer;
-    nkS32       bind = 0;
-};
-
-struct ShaderDesc
-{
-    void*       data          = NULL;
-    nkU64       bytes         = 0;
-    UniformDesc uniforms[32]  = {};
-    nkU64       uniform_count = 0;
-};
-
-GLOBAL Shader create_shader(const ShaderDesc& desc);
-GLOBAL void   free_shader  (Shader shader);
-// =============================================================================
-
-// Sampler =====================================================================
-DECLARE_PRIVATE_TYPE(Sampler);
 
 NK_ENUM(SamplerFilter, nkS32)
 {
@@ -82,21 +47,6 @@ NK_ENUM(SamplerWrap, nkS32)
     SamplerWrap_TOTAL
 };
 
-struct SamplerDesc
-{
-    SamplerFilter filter = SamplerFilter_Nearest;
-    SamplerWrap   wrap_x = SamplerWrap_Clamp;
-    SamplerWrap   wrap_y = SamplerWrap_Clamp;
-    SamplerWrap   wrap_z = SamplerWrap_Clamp;
-};
-
-GLOBAL Sampler create_sampler(const SamplerDesc& desc);
-GLOBAL void    free_sampler  (Sampler sampler);
-// =============================================================================
-
-// Texture =====================================================================
-DECLARE_PRIVATE_TYPE(Texture);
-
 NK_ENUM(TextureType, nkS32)
 {
     TextureType_2D,
@@ -111,46 +61,6 @@ NK_ENUM(TextureFormat, nkS32)
     TextureFormat_D24S8,
     TextureFormat_TOTAL
 };
-
-struct TextureDesc
-{
-    TextureType   type   = TextureType_2D;
-    TextureFormat format = TextureFormat_RGBA;
-    nkS32         width  = 0;
-    nkS32         height = 0;
-    void*         data   = NULL;
-};
-
-GLOBAL Texture create_texture    (const TextureDesc& desc);
-GLOBAL void    free_texture      (Texture texture);
-GLOBAL void    resize_texture    (Texture texture, nkS32 width, nkS32 height);
-GLOBAL nkVec2  get_texture_size  (Texture texture);
-GLOBAL nkS32   get_texture_width (Texture texture);
-GLOBAL nkS32   get_texture_height(Texture texture);
-// =============================================================================
-
-// Render Pass =================================================================
-INTERNAL constexpr Texture BACKBUFFER = NULL;
-
-DECLARE_PRIVATE_TYPE(RenderPass);
-
-struct RenderPassDesc
-{
-    Texture color_targets[16]    = { BACKBUFFER };
-    Texture depth_stencil_target = NULL;
-    nkU32   num_color_targets    = 1;
-    nkBool  clear                = NK_FALSE;
-    nkVec4  clear_color          = NK_V4_BLACK;
-};
-
-GLOBAL RenderPass create_render_pass(const RenderPassDesc& desc);
-GLOBAL void       free_render_pass  (RenderPass pass);
-GLOBAL void       begin_render_pass (RenderPass pass);
-GLOBAL void       end_render_pass   (void);
-// =============================================================================
-
-// Render Pipeline =============================================================
-DECLARE_PRIVATE_TYPE(RenderPipeline);
 
 NK_ENUM(DrawMode, nkS32)
 {
@@ -209,7 +119,9 @@ NK_ENUM(AttribType, nkS32)
     AttribType_Float,
     AttribType_TOTAL
 };
+// =============================================================================
 
+// Structures ==================================================================
 struct VertexAttrib
 {
     nkU32      index       = 0;
@@ -226,6 +138,55 @@ struct VertexLayout
     nkU64        byte_stride  = 0;
 };
 
+struct BufferDesc
+{
+    BufferType  type  = BufferType_Vertex;
+    BufferUsage usage = BufferUsage_Static;
+    void*       data  = NULL;
+    nkU64       bytes = 0;
+};
+
+struct UniformDesc
+{
+    nkString    name;
+    UniformType type = UniformType_Buffer;
+    nkS32       bind = 0;
+};
+
+struct ShaderDesc
+{
+    void*       data          = NULL;
+    nkU64       bytes         = 0;
+    UniformDesc uniforms[32]  = {};
+    nkU64       uniform_count = 0;
+};
+
+struct SamplerDesc
+{
+    SamplerFilter filter = SamplerFilter_Nearest;
+    SamplerWrap   wrap_x = SamplerWrap_Clamp;
+    SamplerWrap   wrap_y = SamplerWrap_Clamp;
+    SamplerWrap   wrap_z = SamplerWrap_Clamp;
+};
+
+struct TextureDesc
+{
+    TextureType   type   = TextureType_2D;
+    TextureFormat format = TextureFormat_RGBA;
+    nkS32         width  = 0;
+    nkS32         height = 0;
+    void*         data   = NULL;
+};
+
+struct RenderPassDesc
+{
+    Texture color_targets[16]    = { BACKBUFFER };
+    Texture depth_stencil_target = NULL;
+    nkU32   num_color_targets    = 1;
+    nkBool  clear                = NK_FALSE;
+    nkVec4  clear_color          = NK_V4_BLACK;
+};
+
 struct RenderPipelineDesc
 {
     VertexLayout vertex_layout;
@@ -238,20 +199,41 @@ struct RenderPipelineDesc
     nkBool       depth_read  = NK_TRUE;
     nkBool       depth_write = NK_TRUE;
 };
-
-GLOBAL RenderPipeline create_render_pipeline(const RenderPipelineDesc& desc);
-GLOBAL void           free_render_pipeline  (RenderPipeline pipeline);
 // =============================================================================
 
-// Renderer ====================================================================
-GLOBAL void set_viewport (nkF32 x, nkF32 y, nkF32 w, nkF32 h);
-GLOBAL void begin_scissor(nkF32 x, nkF32 y, nkF32 w, nkF32 h);
-GLOBAL void end_scissor  (void);
-GLOBAL void bind_pipeline(RenderPipeline pipeline);
-GLOBAL void bind_buffer  (Buffer buffer, nkS32 slot = 0);
-GLOBAL void bind_texture (Texture texture, Sampler sampler, nkS32 unit);
-GLOBAL void draw_arrays  (nkU64 vertex_count);
-GLOBAL void draw_elements(nkU64 element_count, ElementType element_type, nkU64 byteOffset = 0);
+// Functions ===================================================================
+GLOBAL void           setup_renderer_platform(void);
+GLOBAL void           init_render_system     (void);
+GLOBAL void           quit_render_system     (void);
+GLOBAL void           maybe_resize_backbuffer(void);
+GLOBAL void           present_renderer       (void);
+GLOBAL Buffer         create_buffer          (const BufferDesc&         desc);
+GLOBAL Shader         create_shader          (const ShaderDesc&         desc);
+GLOBAL Sampler        create_sampler         (const SamplerDesc&        desc);
+GLOBAL Texture        create_texture         (const TextureDesc&        desc);
+GLOBAL RenderPass     create_render_pass     (const RenderPassDesc&     desc);
+GLOBAL RenderPipeline create_render_pipeline (const RenderPipelineDesc& desc);
+GLOBAL void           free_buffer            (Buffer           buffer);
+GLOBAL void           free_shader            (Shader           shader);
+GLOBAL void           free_sampler           (Sampler         sampler);
+GLOBAL void           free_texture           (Texture         texture);
+GLOBAL void           free_render_pass       (RenderPass         pass);
+GLOBAL void           free_render_pipeline   (RenderPipeline pipeline);
+GLOBAL void           update_buffer          (Buffer buffer, void* data, nkU64 bytes);
+GLOBAL void           resize_texture         (Texture texture, nkS32 width, nkS32 height);
+GLOBAL iPoint         get_texture_size       (Texture texture);
+GLOBAL nkS32          get_texture_width      (Texture texture);
+GLOBAL nkS32          get_texture_height     (Texture texture);
+GLOBAL void           set_viewport           (nkF32 x, nkF32 y, nkF32 w, nkF32 h);
+GLOBAL void           begin_scissor          (nkF32 x, nkF32 y, nkF32 w, nkF32 h);
+GLOBAL void           end_scissor            (void);
+GLOBAL void           begin_render_pass      (RenderPass pass);
+GLOBAL void           end_render_pass        (void);
+GLOBAL void           bind_pipeline          (RenderPipeline pipeline);
+GLOBAL void           bind_buffer            (Buffer buffer, nkS32 slot = 0);
+GLOBAL void           bind_texture           (Texture texture, Sampler sampler, nkS32 unit = 0);
+GLOBAL void           draw_arrays            (nkU64 vertex_count);
+GLOBAL void           draw_elements          (nkU64 element_count, ElementType element_type, nkU64 byteOffset = 0);
 // =============================================================================
 
 /*////////////////////////////////////////////////////////////////////////////*/

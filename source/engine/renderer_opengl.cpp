@@ -3,54 +3,9 @@
 #if defined(BUILD_NATIVE)
 #include <glew.c>
 #endif // BUILD_NATIVE
-
 #if defined(BUILD_WEB)
 #include <GLES3/gl3.h>
 #endif // BUILD_WEB
-
-INTERNAL constexpr GLenum BUFFER_TYPE_TO_GL[] = { GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, GL_UNIFORM_BUFFER };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(BUFFER_TYPE_TO_GL) == BufferType_TOTAL, buffer_type_size_mismatch);
-
-INTERNAL constexpr GLenum BUFFER_USAGE_TO_GL[] = { GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(BUFFER_USAGE_TO_GL) == BufferUsage_TOTAL, buffer_usage_size_mismatch);
-
-INTERNAL constexpr GLenum SAMPLER_FILTER_TO_GL[] = { GL_NEAREST, GL_LINEAR };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(SAMPLER_FILTER_TO_GL) == SamplerFilter_TOTAL, sampler_filter_size_mismatch);
-
-INTERNAL constexpr GLenum SAMPLER_WRAP_TO_GL[] = { GL_REPEAT, GL_CLAMP_TO_EDGE };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(SAMPLER_WRAP_TO_GL) == SamplerWrap_TOTAL, sampler_wrap_size_mismatch);
-
-INTERNAL constexpr GLenum TEXTURE_TYPE_TO_GL[] = { GL_TEXTURE_2D };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(TEXTURE_TYPE_TO_GL) == TextureType_TOTAL, texture_type_size_mistmatch);
-
-INTERNAL constexpr GLenum DRAW_MODE_TO_GL[] = { GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_TRIANGLES, GL_TRIANGLE_STRIP };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(DRAW_MODE_TO_GL) == DrawMode_TOTAL, draw_mode_size_mismatch);
-
-INTERNAL constexpr GLenum DEPTH_OP_TO_GL[] = { GL_NEVER, GL_EQUAL, GL_NOTEQUAL, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL, GL_ALWAYS };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(DEPTH_OP_TO_GL) == DepthOp_TOTAL, depth_op_size_mismatch);
-
-INTERNAL constexpr GLenum ELEMENT_TYPE_TO_GL[] = { GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(ELEMENT_TYPE_TO_GL) == ElementType_TOTAL, element_type_size_mismatch);
-
-INTERNAL constexpr GLenum ATTRIB_TYPE_TO_GL[] = { GL_BYTE, GL_UNSIGNED_BYTE, GL_INT, GL_UNSIGNED_INT, GL_FLOAT };
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(ATTRIB_TYPE_TO_GL) == AttribType_TOTAL, attrib_type_size_mismatch);
-
-struct OpenGLTextureFormat
-{
-    GLenum internal_format;
-    GLenum format;
-    GLenum type;
-};
-
-INTERNAL constexpr OpenGLTextureFormat TEXTURE_FORMAT_TO_GL[] =
-{
-    { GL_R8, GL_RED, GL_UNSIGNED_BYTE },
-    { GL_RGB, GL_RGB, GL_UNSIGNED_BYTE },
-    { GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE },
-    { GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8 }
-};
-
-NK_STATIC_ASSERT(NK_ARRAY_SIZE(TEXTURE_FORMAT_TO_GL) == TextureFormat_TOTAL, texture_format_size_mismatch);
 
 struct OpenGLContext
 {
@@ -63,97 +18,24 @@ struct OpenGLContext
 
 INTERNAL OpenGLContext g_ogl;
 
-// On Windows we also enable the debug callback. We can't/don't do this on MacOS or the web build because
-// they do not support OpenGL versions that have access to the debug callback unfortunately. On those
-// platforms we setup both a GL3.3 and GLES3 context respectively and on Windows we setup a GL4.3 context.
-#if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
-INTERNAL void opengl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userdata)
-{
-    NK_UNUSED(userdata);
-    NK_UNUSED(length);
-    NK_UNUSED(id);
-    NK_UNUSED(type);
-    NK_UNUSED(source);
-
-    const nkChar* severity_string = "Info";
-    switch(severity)
-    {
-        case GL_DEBUG_SEVERITY_LOW: severity_string = "Low"; break;
-        case GL_DEBUG_SEVERITY_MEDIUM: severity_string = "Medium"; break;
-        case GL_DEBUG_SEVERITY_HIGH: severity_string = "High"; break;
-    }
-
-    printf("[OpenGL %s]: %s\n", severity_string, message);
-}
-#endif // BUILD_DEBUG && NK_OS_WIN32
-
-GLOBAL void init_render_system(void)
-{
-    printf("[OpenGL]: Initializing System\n");
-
-    g_ogl.context = SDL_GL_CreateContext(NK_CAST(SDL_Window*, get_window()));
-    if(!g_ogl.context)
-    {
-        fatal_error("Failed to create OpenGL context: %s", SDL_GetError());
-    }
-
-    // Enable VSync by default, if we don't get it then oh well.
-    if(SDL_GL_SetSwapInterval(1) == 0)
-    {
-        printf("[OpenGL]: VSync Enabled!\n");
-    }
-
-    #if defined(BUILD_NATIVE)
-    glewInit();
-    #endif // BUILD_NATIVE
-
-    printf("[OpenGL]: GPU Renderer   : %s\n", glGetString(GL_RENDERER));
-    printf("[OpenGL]: GPU Vendor     : %s\n", glGetString(GL_VENDOR));
-    printf("[OpenGL]: OpenGL Version : %s\n", glGetString(GL_VERSION));
-    printf("[OpenGL]: GLSL Version   : %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-
-    // Enable debug logging when in debug mode for extra help/info from OpenGL.
-    #if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(opengl_debug_callback, NULL);
-    #endif // BUILD_DEBUG && NK_OS_WIN32
-
-    // We need one Vertex Array Object in order to render with modern OpenGL.
-    #if defined(BUILD_NATIVE)
-    glGenVertexArrays(1, &g_ogl.vertex_array_object);
-    glBindVertexArray(g_ogl.vertex_array_object);
-    #endif // BUILD_NATIVE
-}
-
-GLOBAL void quit_render_system(void)
-{
-    #if defined(BUILD_NATIVE)
-    glDeleteVertexArrays(1, &g_ogl.vertex_array_object);
-    #endif // BUILD_NATIVE
-
-    SDL_GL_DeleteContext(g_ogl.context);
-}
-
-GLOBAL void setup_renderer_platform(void)
-{
-    #if defined(BUILD_NATIVE)
-    #if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    #else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    #endif // BUILD_DEBUG && NK_OS_WIN32
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    #endif // BUILD_NATIVE
-    #if defined(BUILD_WEB)
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    #endif // BUILD_WEB
-}
-
 // Buffer ======================================================================
+
+INTERNAL constexpr GLenum BUFFER_TYPE_TO_GL[] =
+{
+    GL_ARRAY_BUFFER,
+    GL_ELEMENT_ARRAY_BUFFER,
+    GL_UNIFORM_BUFFER
+};
+
+INTERNAL constexpr GLenum BUFFER_USAGE_TO_GL[] =
+{
+    GL_STATIC_DRAW,
+    GL_DYNAMIC_DRAW,
+    GL_STREAM_DRAW
+};
+
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(BUFFER_TYPE_TO_GL) == BufferType_TOTAL, buffer_type_size_mismatch);
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(BUFFER_USAGE_TO_GL) == BufferUsage_TOTAL, buffer_usage_size_mismatch);
 
 DEFINE_PRIVATE_TYPE(Buffer)
 {
@@ -299,6 +181,21 @@ GLOBAL void free_shader(Shader shader)
 
 // Sampler =====================================================================
 
+INTERNAL constexpr GLenum SAMPLER_FILTER_TO_GL[] =
+{
+    GL_NEAREST,
+    GL_LINEAR
+};
+
+INTERNAL constexpr GLenum SAMPLER_WRAP_TO_GL[] =
+{
+    GL_REPEAT,
+    GL_CLAMP_TO_EDGE
+};
+
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(SAMPLER_FILTER_TO_GL) == SamplerFilter_TOTAL, sampler_filter_size_mismatch);
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(SAMPLER_WRAP_TO_GL) == SamplerWrap_TOTAL, sampler_wrap_size_mismatch);
+
 DEFINE_PRIVATE_TYPE(Sampler)
 {
     GLuint handle;
@@ -331,6 +228,29 @@ GLOBAL void free_sampler(Sampler sampler)
 // =============================================================================
 
 // Texture =====================================================================
+
+INTERNAL constexpr GLenum TEXTURE_TYPE_TO_GL[] =
+{
+    GL_TEXTURE_2D
+};
+
+struct OpenGLTextureFormat
+{
+    GLenum internal_format;
+    GLenum format;
+    GLenum type;
+};
+
+INTERNAL constexpr OpenGLTextureFormat TEXTURE_FORMAT_TO_GL[] =
+{
+    { GL_R8,               GL_RED,           GL_UNSIGNED_BYTE     },
+    { GL_RGB,              GL_RGB,           GL_UNSIGNED_BYTE     },
+    { GL_RGBA,             GL_RGBA,          GL_UNSIGNED_BYTE     },
+    { GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8 }
+};
+
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(TEXTURE_TYPE_TO_GL) == TextureType_TOTAL, texture_type_size_mistmatch);
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(TEXTURE_FORMAT_TO_GL) == TextureFormat_TOTAL, texture_format_size_mismatch);
 
 DEFINE_PRIVATE_TYPE(Texture)
 {
@@ -394,12 +314,12 @@ GLOBAL void resize_texture(Texture texture, nkS32 width, nkS32 height)
     texture->height = height;
 }
 
-GLOBAL nkVec2 get_texture_size(Texture texture)
+GLOBAL iPoint get_texture_size(Texture texture)
 {
     NK_ASSERT(texture);
-    nkVec2 size;
-    size.x = NK_CAST(nkF32, texture->width);
-    size.y = NK_CAST(nkF32, texture->height);
+    iPoint size;
+    size.x = texture->width;
+    size.y = texture->height;
     return size;
 }
 
@@ -566,6 +486,148 @@ GLOBAL void free_render_pipeline(RenderPipeline pipeline)
 
 // Renderer ====================================================================
 
+INTERNAL constexpr GLenum DRAW_MODE_TO_GL[] =
+{
+    GL_POINTS,
+    GL_LINES,
+    GL_LINE_STRIP,
+    GL_TRIANGLES,
+    GL_TRIANGLE_STRIP
+};
+
+INTERNAL constexpr GLenum DEPTH_OP_TO_GL[] =
+{
+    GL_NEVER,
+    GL_EQUAL,
+    GL_NOTEQUAL,
+    GL_LESS,
+    GL_LEQUAL,
+    GL_GREATER,
+    GL_GEQUAL,
+    GL_ALWAYS
+};
+
+INTERNAL constexpr GLenum ELEMENT_TYPE_TO_GL[] =
+{
+    GL_UNSIGNED_BYTE,
+    GL_UNSIGNED_SHORT,
+    GL_UNSIGNED_INT
+};
+
+INTERNAL constexpr GLenum ATTRIB_TYPE_TO_GL[] =
+{
+    GL_BYTE,
+    GL_UNSIGNED_BYTE,
+    GL_INT,
+    GL_UNSIGNED_INT,
+    GL_FLOAT
+};
+
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(DRAW_MODE_TO_GL) == DrawMode_TOTAL, draw_mode_size_mismatch);
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(DEPTH_OP_TO_GL) == DepthOp_TOTAL, depth_op_size_mismatch);
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(ELEMENT_TYPE_TO_GL) == ElementType_TOTAL, element_type_size_mismatch);
+NK_STATIC_ASSERT(NK_ARRAY_SIZE(ATTRIB_TYPE_TO_GL) == AttribType_TOTAL, attrib_type_size_mismatch);
+
+// On Windows we also enable the debug callback. We can't/don't do this on MacOS or the web build because
+// they do not support OpenGL versions that have access to the debug callback unfortunately. On those
+// platforms we setup both a GL3.3 and GLES3 context respectively and on Windows we setup a GL4.3 context.
+#if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
+INTERNAL void opengl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userdata)
+{
+    NK_UNUSED(userdata);
+    NK_UNUSED(length);
+    NK_UNUSED(id);
+    NK_UNUSED(type);
+    NK_UNUSED(source);
+
+    const nkChar* severity_string = "Info";
+    switch(severity)
+    {
+        case GL_DEBUG_SEVERITY_LOW: severity_string = "Low"; break;
+        case GL_DEBUG_SEVERITY_MEDIUM: severity_string = "Medium"; break;
+        case GL_DEBUG_SEVERITY_HIGH: severity_string = "High"; break;
+    }
+
+    printf("[OpenGL %s]: %s\n", severity_string, message);
+}
+#endif // BUILD_DEBUG && NK_OS_WIN32
+
+GLOBAL void setup_renderer_platform(void)
+{
+    #if defined(BUILD_NATIVE)
+    #if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    #else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    #endif // BUILD_DEBUG && NK_OS_WIN32
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    #endif // BUILD_NATIVE
+    #if defined(BUILD_WEB)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    #endif // BUILD_WEB
+}
+
+GLOBAL void init_render_system(void)
+{
+    printf("[OpenGL]: Initializing System\n");
+
+    g_ogl.context = SDL_GL_CreateContext(NK_CAST(SDL_Window*, get_window()));
+    if(!g_ogl.context)
+    {
+        fatal_error("Failed to create OpenGL context: %s", SDL_GetError());
+    }
+
+    // Enable VSync by default, if we don't get it then oh well.
+    if(SDL_GL_SetSwapInterval(1) == 0)
+    {
+        printf("[OpenGL]: VSync Enabled!\n");
+    }
+
+    #if defined(BUILD_NATIVE)
+    glewInit();
+    #endif // BUILD_NATIVE
+
+    printf("[OpenGL]: GPU Renderer   : %s\n", glGetString(GL_RENDERER));
+    printf("[OpenGL]: GPU Vendor     : %s\n", glGetString(GL_VENDOR));
+    printf("[OpenGL]: OpenGL Version : %s\n", glGetString(GL_VERSION));
+    printf("[OpenGL]: GLSL Version   : %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    // Enable debug logging when in debug mode for extra help/info from OpenGL.
+    #if defined(BUILD_DEBUG) && defined(NK_OS_WIN32)
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(opengl_debug_callback, NULL);
+    #endif // BUILD_DEBUG && NK_OS_WIN32
+
+    // We need one Vertex Array Object in order to render with modern OpenGL.
+    #if defined(BUILD_NATIVE)
+    glGenVertexArrays(1, &g_ogl.vertex_array_object);
+    glBindVertexArray(g_ogl.vertex_array_object);
+    #endif // BUILD_NATIVE
+}
+
+GLOBAL void quit_render_system(void)
+{
+    #if defined(BUILD_NATIVE)
+    glDeleteVertexArrays(1, &g_ogl.vertex_array_object);
+    #endif // BUILD_NATIVE
+
+    SDL_GL_DeleteContext(g_ogl.context);
+}
+
+GLOBAL void maybe_resize_backbuffer(void)
+{
+    // This does nothing in the OpenGL backend as the backbuffer is handled for us.
+}
+
+GLOBAL void present_renderer(void)
+{
+    SDL_GL_SwapWindow(NK_CAST(SDL_Window*, get_window()));
+}
+
 GLOBAL void set_viewport(nkF32 x, nkF32 y, nkF32 w, nkF32 h)
 {
     GLint   vx = NK_CAST(GLint,   x);
@@ -602,15 +664,15 @@ GLOBAL void bind_pipeline(RenderPipeline pipeline)
     glUseProgram(pipeline->desc.shader->program);
 
     // Setup unifrom bindings.
-    for (nkU64 i = 0; i < pipeline->uniform_count; ++i)
+    for(nkU64 i = 0; i < pipeline->uniform_count; ++i)
     {
         const Uniform& u = pipeline->uniforms[i];
 
-        if (u.type == UniformType_Buffer)
+        if(u.type == UniformType_Buffer)
         {
             glUniformBlockBinding(pipeline->desc.shader->program, u.location, u.binding);
         }
-        if (u.type == UniformType_Texture)
+        if(u.type == UniformType_Texture)
         {
             glUniform1i(u.location, u.binding);
         }
@@ -676,10 +738,10 @@ GLOBAL void bind_buffer(Buffer buffer, nkS32 slot)
     if(buffer->type != GL_UNIFORM_BUFFER) glBindBuffer(buffer->type, buffer->handle);
     else glBindBufferBase(buffer->type, slot, buffer->handle);
 
-    // Setup the attributes for the buffer.
-    if(buffer->type == GL_ARRAY_BUFFER && g_ogl.current_vertex_layout)
+    // Setup the vertex layout attributes for the buffer if it's a vertex layout.
+    // We do this here because a buffer has to be bound before these can be set.
+    if(g_ogl.current_vertex_layout && (buffer->type == GL_ARRAY_BUFFER))
     {
-        // Setup the vertex layout attributes.
         for(nkS32 i=0; i<g_ogl.current_vertex_layout->attrib_count; ++i)
         {
             const VertexAttrib* attrib = &g_ogl.current_vertex_layout->attribs[i];

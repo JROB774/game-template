@@ -423,24 +423,34 @@ INTERNAL void main_loop(void)
     while(update_timer >= dt)
     {
         update_input_state();
+
         begin_debug_ui_frame();
+
         clear_post_process_effects(); // We clear effects before each tick.
+
         app_tick(dt);
+
         end_debug_ui_frame();
         reset_input_state();
 
         g_ctx.ticks++;
+
         update_timer -= dt;
     }
 
+    maybe_resize_backbuffer();
+
     imm_begin_frame();
     begin_render_frame();
+
     app_draw();
+
     end_render_frame();
     imm_end_frame();
+
     render_debug_ui_frame();
 
-    SDL_GL_SwapWindow(g_ctx.window);
+    present_renderer();
 
     end_counter = SDL_GetPerformanceCounter();
     elapsed_counter = end_counter - last_counter;
