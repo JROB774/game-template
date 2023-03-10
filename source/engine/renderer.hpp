@@ -56,7 +56,6 @@ NK_ENUM(TextureType, nkS32)
 NK_ENUM(TextureFormat, nkS32)
 {
     TextureFormat_R,
-    TextureFormat_RGB,
     TextureFormat_RGBA,
     TextureFormat_D24S8,
     TextureFormat_TOTAL
@@ -85,7 +84,6 @@ NK_ENUM(CullFace, nkS32)
     CullFace_None,
     CullFace_Front,
     CullFace_Back,
-    CullFace_FrontAndBack,
     CullFace_TOTAL
 };
 
@@ -104,7 +102,6 @@ NK_ENUM(DepthOp, nkS32)
 
 NK_ENUM(ElementType, nkS32)
 {
-    ElementType_UnsignedByte,
     ElementType_UnsignedShort,
     ElementType_UnsignedInt,
     ElementType_TOTAL
@@ -112,11 +109,11 @@ NK_ENUM(ElementType, nkS32)
 
 NK_ENUM(AttribType, nkS32)
 {
-    AttribType_SignedByte,
-    AttribType_UnsignedByte,
-    AttribType_SignedInt,
-    AttribType_UnsignedInt,
-    AttribType_Float,
+    AttribType_UByte4,
+    AttribType_Float1,
+    AttribType_Float2,
+    AttribType_Float3,
+    AttribType_Float4,
     AttribType_TOTAL
 };
 // =============================================================================
@@ -124,11 +121,12 @@ NK_ENUM(AttribType, nkS32)
 // Structures ==================================================================
 struct VertexAttrib
 {
-    nkU32      index       = 0;
-    AttribType type        = AttribType_Float;
-    nkU32      components  = 4;
-    nkU64      byte_offset = 0;
-    nkBool     enabled     = NK_FALSE;
+    nkU32          index          = 0;
+    const nkChar*  semantic_name  = NULL;
+    nkU32          semantic_index = 0;
+    AttribType     type           = AttribType_Float1;
+    nkU64          byte_offset    = 0;
+    nkBool         enabled        = NK_FALSE;
 };
 
 struct VertexLayout

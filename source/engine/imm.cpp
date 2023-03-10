@@ -76,25 +76,27 @@ INTERNAL ImmContext g_imm;
 
 GLOBAL void imm_init(void)
 {
-    g_imm.vertex_layout.attribs[0] = { 0, AttribType_Float, 4, offsetof(ImmVertex, position ), NK_TRUE };
-    g_imm.vertex_layout.attribs[1] = { 1, AttribType_Float, 4, offsetof(ImmVertex, normal   ), NK_TRUE };
-    g_imm.vertex_layout.attribs[2] = { 2, AttribType_Float, 4, offsetof(ImmVertex, color    ), NK_TRUE };
-    g_imm.vertex_layout.attribs[3] = { 3, AttribType_Float, 4, offsetof(ImmVertex, texcoord ), NK_TRUE };
-    g_imm.vertex_layout.attribs[4] = { 4, AttribType_Float, 4, offsetof(ImmVertex, userdata0), NK_TRUE };
-    g_imm.vertex_layout.attribs[5] = { 5, AttribType_Float, 4, offsetof(ImmVertex, userdata1), NK_TRUE };
-    g_imm.vertex_layout.attribs[6] = { 6, AttribType_Float, 4, offsetof(ImmVertex, userdata2), NK_TRUE };
-    g_imm.vertex_layout.attribs[7] = { 7, AttribType_Float, 4, offsetof(ImmVertex, userdata3), NK_TRUE };
+    g_imm.vertex_layout.attribs[0] = { 0, "POSITION",  0, AttribType_Float4, offsetof(ImmVertex, position ), NK_TRUE };
+    g_imm.vertex_layout.attribs[1] = { 1, "NORMAL",    0, AttribType_Float4, offsetof(ImmVertex, normal   ), NK_TRUE };
+    g_imm.vertex_layout.attribs[2] = { 2, "COLOR",     0, AttribType_Float4, offsetof(ImmVertex, color    ), NK_TRUE };
+    g_imm.vertex_layout.attribs[3] = { 3, "TEXCOORD",  0, AttribType_Float4, offsetof(ImmVertex, texcoord ), NK_TRUE };
+    g_imm.vertex_layout.attribs[4] = { 4, "USERDATA",  0, AttribType_Float4, offsetof(ImmVertex, userdata0), NK_TRUE };
+    g_imm.vertex_layout.attribs[5] = { 5, "USERDATA",  1, AttribType_Float4, offsetof(ImmVertex, userdata1), NK_TRUE };
+    g_imm.vertex_layout.attribs[6] = { 6, "USERDATA",  2, AttribType_Float4, offsetof(ImmVertex, userdata2), NK_TRUE };
+    g_imm.vertex_layout.attribs[7] = { 7, "USERDATA",  3, AttribType_Float4, offsetof(ImmVertex, userdata3), NK_TRUE };
     g_imm.vertex_layout.attrib_count = 8;
     g_imm.vertex_layout.byte_stride = sizeof(ImmVertex);
 
     BufferDesc vbuffer_desc;
     vbuffer_desc.usage = BufferUsage_Dynamic;
     vbuffer_desc.type  = BufferType_Vertex;
+    vbuffer_desc.bytes = NK_KB_TO_BYTES(16);
     g_imm.vertex_buffer = create_buffer(vbuffer_desc);
 
     BufferDesc ubuffer_desc;
     ubuffer_desc.usage = BufferUsage_Dynamic;
     ubuffer_desc.type  = BufferType_Uniform;
+    ubuffer_desc.bytes = NK_KB_TO_BYTES(4);
     for(nkS32 i=0; i<IMM_MAX_UNIFORMS; ++i)
     {
         g_imm.uniform_buffers[i] = create_buffer(ubuffer_desc);

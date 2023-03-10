@@ -14,7 +14,7 @@ GLOBAL void init_post_process_system(void)
 {
     TextureDesc texture_desc;
     texture_desc.type   = TextureType_2D;
-    texture_desc.format = TextureFormat_RGB;
+    texture_desc.format = TextureFormat_RGBA;
     texture_desc.width  = get_window_width();
     texture_desc.height = get_window_height();
 

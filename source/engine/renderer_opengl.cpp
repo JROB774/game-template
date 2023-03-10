@@ -42,7 +42,6 @@ DEFINE_PRIVATE_TYPE(Buffer)
     GLenum usage;
     GLenum type;
     GLuint handle;
-    nkU64  bytes;
 };
 
 GLOBAL Buffer create_buffer(const BufferDesc& desc)
@@ -229,11 +228,6 @@ GLOBAL void free_sampler(Sampler sampler)
 
 // Texture =====================================================================
 
-INTERNAL constexpr GLenum TEXTURE_TYPE_TO_GL[] =
-{
-    GL_TEXTURE_2D
-};
-
 struct OpenGLTextureFormat
 {
     GLenum internal_format;
@@ -241,10 +235,14 @@ struct OpenGLTextureFormat
     GLenum type;
 };
 
+INTERNAL constexpr GLenum TEXTURE_TYPE_TO_GL[] =
+{
+    GL_TEXTURE_2D
+};
+
 INTERNAL constexpr OpenGLTextureFormat TEXTURE_FORMAT_TO_GL[] =
 {
     { GL_R8,               GL_RED,           GL_UNSIGNED_BYTE     },
-    { GL_RGB,              GL_RGB,           GL_UNSIGNED_BYTE     },
     { GL_RGBA,             GL_RGBA,          GL_UNSIGNED_BYTE     },
     { GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8 }
 };
@@ -486,6 +484,12 @@ GLOBAL void free_render_pipeline(RenderPipeline pipeline)
 
 // Renderer ====================================================================
 
+struct OpenGLAttribType
+{
+    GLenum type;
+    GLuint comp;
+};
+
 INTERNAL constexpr GLenum DRAW_MODE_TO_GL[] =
 {
     GL_POINTS,
@@ -509,18 +513,17 @@ INTERNAL constexpr GLenum DEPTH_OP_TO_GL[] =
 
 INTERNAL constexpr GLenum ELEMENT_TYPE_TO_GL[] =
 {
-    GL_UNSIGNED_BYTE,
     GL_UNSIGNED_SHORT,
     GL_UNSIGNED_INT
 };
 
-INTERNAL constexpr GLenum ATTRIB_TYPE_TO_GL[] =
+INTERNAL constexpr OpenGLAttribType ATTRIB_TYPE_TO_GL[] =
 {
-    GL_BYTE,
-    GL_UNSIGNED_BYTE,
-    GL_INT,
-    GL_UNSIGNED_INT,
-    GL_FLOAT
+    { GL_UNSIGNED_BYTE, 4 },
+    { GL_FLOAT,         1 },
+    { GL_FLOAT,         2 },
+    { GL_FLOAT,         3 },
+    { GL_FLOAT,         4 },
 };
 
 NK_STATIC_ASSERT(NK_ARRAY_SIZE(DRAW_MODE_TO_GL) == DrawMode_TOTAL, draw_mode_size_mismatch);
@@ -747,9 +750,9 @@ GLOBAL void bind_buffer(Buffer buffer, nkS32 slot)
             const VertexAttrib* attrib = &g_ogl.current_vertex_layout->attribs[i];
             if(attrib->enabled)
             {
-                GLenum type = ATTRIB_TYPE_TO_GL[attrib->type];
+                OpenGLAttribType type = ATTRIB_TYPE_TO_GL[attrib->type];
                 glEnableVertexAttribArray(attrib->index);
-                glVertexAttribPointer(attrib->index, attrib->components, type, (type == GL_UNSIGNED_BYTE),
+                glVertexAttribPointer(attrib->index, type.comp, type.type, (type.type == GL_UNSIGNED_BYTE),
                     NK_CAST(GLsizei, g_ogl.current_vertex_layout->byte_stride), NK_CAST(const void*, attrib->byte_offset));
             }
             else
@@ -781,7 +784,7 @@ GLOBAL void draw_arrays(nkU64 vertex_count)
     glDrawArrays(mode, 0, NK_CAST(GLsizei,vertex_count));
 }
 
-GLOBAL void draw_elements(nkU64 element_count, ElementType element_type, nkU64 byteOffset)
+GLOBAL void draw_elements(nkU64 element_count, ElementType element_type, nkU64 byte_offset)
 {
     NK_ASSERT(g_ogl.pass_started); // Cannot draw outside of a render pass!
 
@@ -789,7 +792,7 @@ GLOBAL void draw_elements(nkU64 element_count, ElementType element_type, nkU64 b
 
     GLenum mode = DRAW_MODE_TO_GL[g_ogl.current_draw_mode];
     GLenum type = ELEMENT_TYPE_TO_GL[element_type];
-    glDrawElements(mode, NK_CAST(GLsizei,element_count), type, NK_CAST(void*,byteOffset));
+    glDrawElements(mode, NK_CAST(GLsizei,element_count), type, NK_CAST(void*,byte_offset));
 }
 
 // =============================================================================

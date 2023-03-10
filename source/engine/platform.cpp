@@ -332,7 +332,7 @@ INTERNAL void main_init(void)
     // Create the screen render target texture.
     TextureDesc td;
     td.type   = TextureType_2D;
-    td.format = TextureFormat_RGB;
+    td.format = TextureFormat_RGBA;
     td.width  = g_ctx.app_desc.screen_size.x;
     td.height = g_ctx.app_desc.screen_size.y;
     td.data   = NULL;

@@ -62,9 +62,9 @@ INTERNAL void create_draw_data_resources(ImGuiDrawData* draw_data)
     draw_data->shader = asset_manager_load<Shader>("imgui.shader");
 
     // Create the vertex layout.
-    draw_data->vertex_layout.attribs[0]   = { 0, AttribType_Float,        2, IM_OFFSETOF(ImDrawVert, pos), NK_TRUE };
-    draw_data->vertex_layout.attribs[1]   = { 1, AttribType_Float,        2, IM_OFFSETOF(ImDrawVert, uv),  NK_TRUE };
-    draw_data->vertex_layout.attribs[2]   = { 2, AttribType_UnsignedByte, 4, IM_OFFSETOF(ImDrawVert, col), NK_TRUE };
+    draw_data->vertex_layout.attribs[0]   = { 0, "POSITION", 0, AttribType_Float2, IM_OFFSETOF(ImDrawVert, pos), NK_TRUE };
+    draw_data->vertex_layout.attribs[1]   = { 1, "TEXCOORD", 0, AttribType_Float2, IM_OFFSETOF(ImDrawVert, uv),  NK_TRUE };
+    draw_data->vertex_layout.attribs[2]   = { 2, "COLOR",    0, AttribType_UByte4, IM_OFFSETOF(ImDrawVert, col), NK_TRUE };
     draw_data->vertex_layout.attrib_count = 3;
     draw_data->vertex_layout.byte_stride  = sizeof(ImDrawVert);
 
@@ -95,19 +95,19 @@ INTERNAL void create_draw_data_resources(ImGuiDrawData* draw_data)
     vb.type  = BufferType_Vertex;
     vb.usage = BufferUsage_Stream;
     vb.data  = NULL;
-    vb.bytes = 0;
+    vb.bytes = NK_KB_TO_BYTES(16);
 
     BufferDesc ib;
     ib.type  = BufferType_Element;
     ib.usage = BufferUsage_Stream;
     ib.data  = NULL;
-    ib.bytes = 0;
+    ib.bytes = NK_KB_TO_BYTES(16);
 
     BufferDesc ub;
     ub.type  = BufferType_Uniform;
     ub.usage = BufferUsage_Stream;
     ub.data  = NULL;
-    ub.bytes = 0;
+    ub.bytes = NK_KB_TO_BYTES(4);
 
     draw_data->vertex_buffer  = create_buffer(vb);
     draw_data->index_buffer   = create_buffer(ib);
