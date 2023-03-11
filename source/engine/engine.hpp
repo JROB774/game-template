@@ -1,12 +1,12 @@
 /*////////////////////////////////////////////////////////////////////////////*/
 
 #define STB_IMAGE_IMPLEMENTATION
-#define NK_FILESYS_IMPLEMENTATION
-#define NK_NPAK_IMPLEMENTATION
 
 #define STB_IMAGE_STATIC
 #define GLEW_STATIC
 #define NK_STATIC
+
+#define NK_SINGLE_UNIT
 
 #include <nk_define.h>
 #include <nk_math.h>
